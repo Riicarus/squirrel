@@ -22,6 +22,9 @@ typedef struct _hash_map_entry {
 typedef int (*hash_func)(const void *k);
 typedef bool (*eq_func)(const void *k1, const void *k2);
 
+/*
+ * Careful that _hashmap is not thread safe.
+ */
 typedef struct _hashmap {
     uint            size;
     uint            cap;
@@ -36,12 +39,14 @@ typedef struct _hashmap {
     free_func v_free_f;
 } *hashmap;
 
-#define DEFAULT_INIT_SIZE 8
+#define DEFAULT_INIT_CAP 8
 #define DEFAULT_EXPAND_FACTOR 0.75
 #define DEFAULT_SHRINK_FACTOR 0.20
 hashmap hashmap_init_f(
-    int init_size, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f);
-hashmap hashmap_init(int init_size, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f);
+    int init_cap, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f);
+hashmap hashmap_init(int init_cap, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f);
+// Init _hashmap with default capacity 8.
+hashmap hashmap_init_default(hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f);
 
 void hashmap_set_k_free_func(const hashmap map, free_func k_free_f);
 void hashmap_set_v_free_func(const hashmap map, free_func v_free_f);
@@ -69,6 +74,11 @@ typedef bool (*filter_func)(const void *k, void *v);
 // return true means stop.
 typedef bool (*foreach_func)(const void *k, void *v);
 
+/*
+ * Careful that _hashmap_iterator is not thread safe.
+ * _hashmap_iterator should only used to iterator the hash map entries, it's not supposed to update entries and DO NOT
+ * remove entries using iterator(so we did not provide any removal functions in _hashmap_iterator, till now).
+ */
 typedef struct _hashmap_iterator {
     foreach_func foreach_f;
     filter_func  filter_f;
@@ -81,7 +91,7 @@ void        hashmap_itr_set_foreach_f(const hashmap_itr itr, foreach_func foreac
 
 void hashmap_foreach(const hashmap map, const hashmap_itr itr);
 
-/* 
+/*
  * util functions
  */
 

@@ -8,16 +8,16 @@
  * capacity of hashmap must be power of 2.
  */
 hashmap hashmap_init_f(
-    int init_size, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
+    int init_cap, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
     hashmap map = (hashmap)calloc(1, sizeof(struct _hashmap));
     if (map == NULL) goto error;
 
     map->size = 0;
-    if (init_size <= 0) init_size = DEFAULT_INIT_SIZE;
+    if (init_cap <= 0) init_cap = DEFAULT_INIT_CAP;
 
     // avoid overflow
-    if (init_size >= INT_MAX >> 1) map->cap = INT_MAX;
-    else map->cap = is_power_of_2(init_size) ? round_up_power_of_2(init_size) << 1 : round_up_power_of_2(init_size);
+    if (init_cap >= INT_MAX >> 1) map->cap = INT_MAX;
+    else map->cap = is_power_of_2(init_cap) ? round_up_power_of_2(init_cap) << 1 : round_up_power_of_2(init_cap);
 
     map->expand_factor = expand_factor < 0 ? DEFAULT_EXPAND_FACTOR : expand_factor;
     map->shrink_factor = shrink_factor < 0 ? DEFAULT_SHRINK_FACTOR : shrink_factor;
@@ -35,8 +35,12 @@ error:
     return NULL;
 }
 
-hashmap hashmap_init(int init_size, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
-    return hashmap_init_f(init_size, DEFAULT_EXPAND_FACTOR, DEFAULT_SHRINK_FACTOR, hash_f, k_eq_f, v_eq_f);
+hashmap hashmap_init(int init_cap, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
+    return hashmap_init_f(init_cap, DEFAULT_EXPAND_FACTOR, DEFAULT_SHRINK_FACTOR, hash_f, k_eq_f, v_eq_f);
+}
+
+hashmap hashmap_init_default(hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
+    return hashmap_init(DEFAULT_INIT_CAP, hash_f, k_eq_f, v_eq_f);
 }
 
 void hashmap_set_k_free_func(const hashmap map, free_func k_free_f) {
@@ -78,9 +82,7 @@ void _hashmap_rehash(const hashmap map, hash_map_entry *new_bucket, uint new_cap
     map->bucket = new_bucket;
 }
 
-/*
- * inc_size == 0 means shrink.
- */
+// inc_size == 0 means shrink.
 bool _hashmap_ensure_cap(const hashmap map, int inc_size) {
     if (map->size + inc_size > INT_MAX) {
         perror("reach the max capacity of hash map");
