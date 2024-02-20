@@ -4,9 +4,6 @@
 #include <string.h>
 #include <errno.h>
 
-/*
- * capacity of hashmap must be power of 2.
- */
 hashmap hashmap_init_f(
     int init_cap, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
     hashmap map = (hashmap)calloc(1, sizeof(struct _hashmap));
@@ -17,7 +14,7 @@ hashmap hashmap_init_f(
 
     // avoid overflow
     if (init_cap >= INT_MAX >> 1) map->cap = INT_MAX;
-    else map->cap = is_power_of_2(init_cap) ? round_up_power_of_2(init_cap) << 1 : round_up_power_of_2(init_cap);
+    else map->cap = round_up_power_of_2(init_cap);
 
     map->expand_factor = expand_factor < 0 ? DEFAULT_EXPAND_FACTOR : expand_factor;
     map->shrink_factor = shrink_factor < 0 ? DEFAULT_SHRINK_FACTOR : shrink_factor;
@@ -271,9 +268,6 @@ void _free_entry(const hashmap map, hash_map_entry e) {
     e = NULL;
 }
 
-/*
- * returned value may be invalid caused by v_free_func.
- */
 void *hashmap_remove(const hashmap map, const void *k) {
     int h = hash(map->hash_f, k);
     int idx = _hashmap_cul_index(map->cap, h);

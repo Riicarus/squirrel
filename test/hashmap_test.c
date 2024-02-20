@@ -45,7 +45,7 @@ extern int test_hashmap() {
     printf("Size of hash entry: %lu\n", sizeof(hash_map_entry));
     printf("Size of hash node entry: %lu\n", sizeof(struct _hash_map_entry));
 
-    hashmap map = hashmap_init(3, &str_hash_func, &str_eq_func, &str_eq_func);
+    hashmap map = hashmap_init(8, &str_hash_func, &str_eq_func, &str_eq_func);
     hashmap_set_k_free_func(map, &my_free_func);
     hashmap_set_v_free_func(map, &my_free_func);
     printf("Size: %d, Cap: %d, Factor: %f\n", map->size, map->cap, map->expand_factor);
