@@ -163,7 +163,7 @@ static int hash(hash_func hash_f, const void *k) {
 
 static int str_hash_func(const void *k) {
     int         h = 0;
-    const char *c = k;
+    const char *c = (char *)k;
     while (*c != '\0') {
         h += h * 7 + *c;
         c++;
