@@ -128,6 +128,7 @@ extern int test_hashmap() {
     printf("%s\n", (char *)hashmap_get_or_default(map, "def", "another default"));
     printf("%s\n\n", (char *)hashmap_put_if_absent(map, "study", "good"));
     
+    printf("Size: %d, Cap: %d\n\n", map->size, map->cap);
     print_hashmap(map);
 
     printf("\n");

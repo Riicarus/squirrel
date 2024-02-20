@@ -55,17 +55,47 @@ int _hashmap_cul_index(uint cap, int h) {
     return h & (cap - 1);
 }
 
-void _hashmap_rehash(const hashmap map, hash_map_entry *new_bucket, uint new_cap) {
+/*
+ * Expand:
+ * hash = 110110, idx = 6(0110), cap = 16(10000), new_cap = 32(100000)
+ * hash & cap(highest bit of (new_cap - 1)) = 110110 & 10000 = 010000
+ * new_idx = 22 (110110 & 11111) = 6 + 16
+ * otherwise:
+ * hash = 100110, idx = 6(0110), cap = 16(10000), new_cap = 32(100000)
+ * hash & cap(highest bit of (new_cap - 1)) = 100110 & 10000 = 000000
+ * new_idx = 6 (100110 & 11111) = 6 (the same index)
+ *
+ * Shrink:
+ * hash = 110110, idx = 22(10110), cap = 32(100000), new_cap = 16(10000)
+ * hash & new_cap(highest bit of (cap - 1)) = 110110 & 10000 = 010000
+ * new_idx = 6 (110110 & 1111) = 22 - 16
+ * otherwise:
+ * hash = 100110, idx = 22(0110), cap = 32(100000), new_cap = 16(10000)
+ * hash & new_cap(highest bit of (cap - 1)) = 100110 & 10000 = 000000
+ * new_idx = 6 (100110 & 1111) = 6 (the same index)
+ */
+void _hashmap_rehash(const hashmap map, hash_map_entry *new_bucket, bool is_expand) {
     hash_map_entry *b = map->bucket;
     hash_map_entry  e, ne;
+    int             new_idx;
 
+    uint new_cap = is_expand ? map->cap << 1 : map->cap >> 1;
     for (int i = 0; i < map->cap; i++, b++) {
-        // if this bucket is empty, continue to next;
         if ((e = *b) == NULL) continue;
 
-        // iterate entries and move them to new bucket
         while (e != NULL) {
-            int new_idx = _hashmap_cul_index(new_cap, e->hash);
+            /*
+             * hash = 110110, idx = 6(0110), cap = 16(10000), new_cap = 32(100000)
+             * hash & cap(highest bit of (new_cap - 1)) = 110110 & 10000 = 010000
+             * new_idx = 22 (110110 & 11111) = 6 + 16
+             * otherwise:
+             * hash = 100110, idx = 6(0110), cap = 16(10000), new_cap = 32(100000)
+             * hash & cap(highest bit of (new_cap - 1)) = 100110 & 10000 = 000000
+             * new_idx = 6 (100110 & 11111) = 6 (the same index)
+             */
+            if (is_expand) new_idx = e->hash & map->cap ? i + map->cap : i;
+            else new_idx = e->hash & new_cap ? i - new_cap : i;
+
             ne = e->next;
             e->next = NULL;
 
@@ -89,22 +119,23 @@ bool _hashmap_ensure_cap(const hashmap map, int inc_size) {
         return false;
     }
 
-    int mod;
-    if (!inc_size && map->size <= map->shrink_factor * map->cap) mod = SHRINK_MOD;
+    bool is_expand;
+    if (!inc_size && map->size <= map->shrink_factor * map->cap) is_expand = false;
     else if (map->cap != INT_MAX && inc_size > 0 && map->size + inc_size >= map->expand_factor * map->cap)
-        mod = EXPAND_MOD;
+        is_expand = true;
     else return true;
 
-    uint            new_cap = mod ? map->cap << 1 : map->cap >> 1;
-    // TODO: optimize, use realloc for expand, use calloc for shrink, thus the rehash method should also be updated to 2 methods.
-    hash_map_entry *new_bucket = (hash_map_entry *)calloc(new_cap, sizeof(hash_map_entry));
-    memset(new_bucket, 0, new_cap * sizeof(hash_map_entry));
-    if (new_bucket == NULL) {
-        perror("no enough memory");
-        return false;
-    }
-    _hashmap_rehash(map, new_bucket, new_cap);
+    hash_map_entry *new_bucket = is_expand ? (hash_map_entry *)calloc(map->cap << 1, sizeof(hash_map_entry))
+                                           : (hash_map_entry *)calloc(map->cap >> 1, sizeof(hash_map_entry));
+
+    if (new_bucket == NULL) goto error;
+
+    _hashmap_rehash(map, new_bucket, is_expand);
     return true;
+
+error:
+    perror("no enough memory");
+    return false;
 }
 
 hash_map_entry _hashmap_get_entry(const hashmap map, const void *k) {
@@ -299,13 +330,14 @@ void hashmap_free(hashmap map) {
 
 hashmap_itr hashmap_itr_init(foreach_func foreach_f) {
     hashmap_itr itr = (hashmap_itr)calloc(1, sizeof(struct _hashmap_iterator));
-    if (itr == NULL) {
-        perror("no enough memory");
-        return NULL;
-    }
+    if (itr == NULL) goto error;
 
     itr->foreach_f = foreach_f;
     return itr;
+
+error:
+    perror("no enough memory");
+    return NULL;
 }
 
 void hashmap_itr_free(hashmap_itr itr) {

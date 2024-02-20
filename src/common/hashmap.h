@@ -51,9 +51,6 @@ hashmap hashmap_init_default(hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f);
 void hashmap_set_k_free_func(const hashmap map, free_func k_free_f);
 void hashmap_set_v_free_func(const hashmap map, free_func v_free_f);
 
-#define SHRINK_MOD 0
-#define EXPAND_MOD 1
-
 bool hashmap_contains_key(const hashmap map, const void *k);
 bool hashmap_contains_value(const hashmap map, void *v);
 
