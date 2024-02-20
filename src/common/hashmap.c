@@ -9,11 +9,11 @@
  * capacity of hashmap must be power of 2.
  */
 hashmap hashmap_init_f(int init_size, float expand_factor, float shrink_factor, hash_func hash_f, eq_func eq_f) {
-    hashmap map = (hashmap)malloc(sizeof(struct _hashmap));
+    hashmap map = (hashmap)calloc(1, sizeof(struct _hashmap));
+    if (map == NULL) goto error;
     map->size = 0;
 
-    if (init_size <= 0)
-        init_size = DEFAULT_INIT_SIZE;
+    if (init_size <= 0) init_size = DEFAULT_INIT_SIZE;
 
     if (init_size >= INT_MAX >> 1) // avoid overflow
         map->cap = INT_MAX;
@@ -23,14 +23,16 @@ hashmap hashmap_init_f(int init_size, float expand_factor, float shrink_factor, 
     map->expand_factor = expand_factor < 0 ? DEFAULT_EXPAND_FACTOR : expand_factor;
     map->shrink_factor = shrink_factor < 0 ? DEFAULT_SHRINK_FACTOR : shrink_factor;
 
-    map->bucket = (hash_map_entry *)malloc(map->cap * sizeof(hash_map_entry));
-    memset(map->bucket, 0, map->cap * sizeof(hash_map_entry));
+    map->bucket = (hash_map_entry *)calloc(map->cap, sizeof(hash_map_entry));
+    if (map->bucket == NULL) goto error;
 
-    if (map->bucket == NULL)
-        return NULL;
     map->hash_f = hash_f == NULL ? &ptr_hash_func : hash_f;
     map->eq_f = eq_f == NULL ? &ptr_eq_func : eq_f;
     return map;
+
+error:
+    perror("no enough memory");
+    return NULL;
 }
 
 hashmap hashmap_init(int init_size, hash_func hash_f, eq_func eq_f) {
@@ -38,8 +40,7 @@ hashmap hashmap_init(int init_size, hash_func hash_f, eq_func eq_f) {
 }
 
 void hashmap_free(hashmap map) {
-    if (map == NULL)
-        return;
+    if (map == NULL) return;
 
     if (map->bucket != NULL) {
         free(map->bucket);
@@ -59,19 +60,18 @@ void hashmap_rehash(const hashmap map, hash_map_entry *new_bucket, uint new_cap)
 
     for (int i = 0; i < map->cap; i++, b++) {
         // if this bucket is empty, continue to next;
-        if ((e = *b) == NULL)
-            continue;
+        if ((e = *b) == NULL) continue;
 
         // iterate entries and move them to new bucket
         while (e != NULL) {
             int new_idx = hashmap_cul_index(new_cap, e->hash);
             ne = e->next;
             e->next = NULL;
+
             // head-insert to new bucket
             hash_map_entry h = new_bucket[new_idx];
             new_bucket[new_idx] = e;
-            if (h != NULL)
-                e->next = h;
+            if (h != NULL) e->next = h;
             e = ne;
         }
     }
@@ -99,7 +99,7 @@ int hashmap_ensure_cap(const hashmap map, int inc_size) {
         return 1;
 
     uint            new_cap = mod ? map->cap << 1 : map->cap >> 1;
-    hash_map_entry *new_bucket = (hash_map_entry *)malloc(new_cap * sizeof(hash_map_entry));
+    hash_map_entry *new_bucket = (hash_map_entry *)calloc(new_cap, sizeof(hash_map_entry));
     memset(new_bucket, 0, new_cap * sizeof(hash_map_entry));
     if (new_bucket == NULL) {
         perror("no enough memory");
@@ -111,13 +111,16 @@ int hashmap_ensure_cap(const hashmap map, int inc_size) {
 
 void *hashmap_put(const hashmap map, void *k, void *v) {
     hash_map_entry e = (hash_map_entry)malloc(sizeof(struct _hash_map_entry));
+    if (e == NULL) {
+        perror("no enough memory");
+        return v;
+    }
     e->hash = hash(map->hash_f, k);
     e->key = k;
     e->val = v;
     e->next = NULL;
 
-    if (!hashmap_ensure_cap(map, 1))
-        return v;
+    if (!hashmap_ensure_cap(map, 1)) return v;
 
     int idx = hashmap_cul_index(map->cap, e->hash);
     if (map->bucket[idx] == NULL) {
@@ -172,6 +175,7 @@ void *hashmap_remove(const hashmap map, void *k) {
             e->next = NULL;
             void *val = e->val;
             free(e);
+            e = NULL;
             map->size -= 1;
 
             hashmap_ensure_cap(map, 0);
@@ -185,9 +189,11 @@ void *hashmap_remove(const hashmap map, void *k) {
 }
 
 hashmap_itr hashmap_itr_init(foreach_func foreach_f) {
-    hashmap_itr itr = (hashmap_itr)malloc(sizeof(struct _hashmap_iterator));
-    if (itr == NULL)
+    hashmap_itr itr = (hashmap_itr)calloc(1, sizeof(struct _hashmap_iterator));
+    if (itr == NULL) {
+        perror("no enough memory");
         return NULL;
+    }
 
     itr->foreach_f = foreach_f;
     return itr;
@@ -195,6 +201,7 @@ hashmap_itr hashmap_itr_init(foreach_func foreach_f) {
 
 void hashmap_itr_free(hashmap_itr itr) {
     free(itr);
+    itr = NULL;
 }
 
 void hashmap_foreach(const hashmap map, const hashmap_itr itr) {
