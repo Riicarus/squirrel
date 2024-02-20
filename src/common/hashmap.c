@@ -7,17 +7,17 @@
 /*
  * capacity of hashmap must be power of 2.
  */
-hashmap hashmap_init_f(int init_size, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
+hashmap hashmap_init_f(
+    int init_size, float expand_factor, float shrink_factor, hash_func hash_f, eq_func k_eq_f, eq_func v_eq_f) {
     hashmap map = (hashmap)calloc(1, sizeof(struct _hashmap));
     if (map == NULL) goto error;
-    map->size = 0;
 
+    map->size = 0;
     if (init_size <= 0) init_size = DEFAULT_INIT_SIZE;
 
-    if (init_size >= INT_MAX >> 1) // avoid overflow
-        map->cap = INT_MAX;
-    else
-        map->cap = IS_POWER_OF_2(init_size) ? round_up_power_of_2(init_size) << 1 : round_up_power_of_2(init_size);
+    // avoid overflow
+    if (init_size >= INT_MAX >> 1) map->cap = INT_MAX;
+    else map->cap = is_power_of_2(init_size) ? round_up_power_of_2(init_size) << 1 : round_up_power_of_2(init_size);
 
     map->expand_factor = expand_factor < 0 ? DEFAULT_EXPAND_FACTOR : expand_factor;
     map->shrink_factor = shrink_factor < 0 ? DEFAULT_SHRINK_FACTOR : shrink_factor;
@@ -81,21 +81,19 @@ void _hashmap_rehash(const hashmap map, hash_map_entry *new_bucket, uint new_cap
 /*
  * inc_size == 0 means shrink.
  */
-_Bool _hashmap_ensure_cap(const hashmap map, int inc_size) {
-    if (map->cap >= INT_MAX) {
+bool _hashmap_ensure_cap(const hashmap map, int inc_size) {
+    if (map->size + inc_size > INT_MAX) {
         perror("reach the max capacity of hash map");
         return false;
     }
 
     int mod;
-    if (!inc_size && map->size <= map->shrink_factor * map->cap)
-        mod = SHRINK_MOD;
-    else if (inc_size > 0 && map->size + inc_size >= map->expand_factor * map->cap)
+    if (!inc_size && map->size <= map->shrink_factor * map->cap) mod = SHRINK_MOD;
+    else if (map->cap != INT_MAX && inc_size > 0 && map->size + inc_size >= map->expand_factor * map->cap)
         mod = EXPAND_MOD;
-    else
-        return true;
+    else return true;
 
-    uint new_cap = mod ? map->cap << 1 : map->cap >> 1;
+    uint            new_cap = mod ? map->cap << 1 : map->cap >> 1;
     // TODO: optimize, use realloc for expand, use calloc for shrink, thus the rehash method should also be updated to 2 methods.
     hash_map_entry *new_bucket = (hash_map_entry *)calloc(new_cap, sizeof(hash_map_entry));
     memset(new_bucket, 0, new_cap * sizeof(hash_map_entry));
@@ -107,19 +105,23 @@ _Bool _hashmap_ensure_cap(const hashmap map, int inc_size) {
     return true;
 }
 
-_Bool hashmap_contains_key(const hashmap map, void *k) {
+hash_map_entry _hashmap_get_entry(const hashmap map, const void *k) {
     int h = hash(map->hash_f, k);
     int idx = _hashmap_cul_index(map->cap, h);
 
     hash_map_entry e = map->bucket[idx];
     while (e != NULL) {
-        if (map->k_eq_f(e->key, k)) return true;
+        if (map->k_eq_f(e->key, k)) return e;
         e = e->next;
     }
-    return false;
+    return NULL;
 }
 
-_Bool hashmap_contains_value(const hashmap map, void *v) {
+bool hashmap_contains_key(const hashmap map, const void *k) {
+    return _hashmap_get_entry(map, k) != NULL;
+}
+
+bool hashmap_contains_value(const hashmap map, void *v) {
     hash_map_entry *b = map->bucket;
     hash_map_entry  e;
     for (int i = 0; i < map->cap; i++, b++) {
@@ -132,7 +134,31 @@ _Bool hashmap_contains_value(const hashmap map, void *v) {
     return false;
 }
 
-void *hashmap_put_f(const hashmap map, void *k, void *v, free_func k_free_f, free_func v_free_func) {
+void *hashmap_get(const hashmap map, const void *k) {
+    int h = hash(map->hash_f, k);
+    int idx = _hashmap_cul_index(map->cap, h);
+
+    hash_map_entry e = map->bucket[idx];
+    while (e != NULL) {
+        if (map->k_eq_f(e->key, k)) return e->val;
+        e = e->next;
+    }
+    return NULL;
+}
+
+void *hashmap_get_or_default(const hashmap map, const void *k, void *def_val) {
+    void *v = hashmap_get(map, k);
+    if (v == NULL) return def_val;
+    return v;
+}
+
+void *hashmap_get_or_default_f(const hashmap map, const void *k, val_produce_func val_produce_f) {
+    void *v = hashmap_get(map, k);
+    if (v == NULL) return val_produce_f(k);
+    return v;
+}
+
+void *hashmap_put_f(const hashmap map, const void *k, void *v, free_func k_free_f, free_func v_free_func) {
     hash_map_entry e = (hash_map_entry)malloc(sizeof(struct _hash_map_entry));
     if (e == NULL) {
         perror("no enough memory");
@@ -171,21 +197,36 @@ void *hashmap_put_f(const hashmap map, void *k, void *v, free_func k_free_f, fre
     return v;
 }
 
-void *hashmap_put(const hashmap map, void *k, void *v) {
+void *hashmap_put(const hashmap map, const void *k, void *v) {
     return hashmap_put_f(map, k, v, NULL, NULL);
 }
 
-void *hashmap_get(const hashmap map, void *k) {
+void *hashmap_put_if_absent(const hashmap map, const void *k, void *def_val) {
+    hash_map_entry e = _hashmap_get_entry(map, k);
+    if (e != NULL) return e->val;
+    return hashmap_put(map, k, def_val);
+}
+
+void *hashmap_put_if_absent_f(const hashmap map, const void *k, val_produce_func val_produce_f) {
+    hash_map_entry e = _hashmap_get_entry(map, k);
+    if (e != NULL) return e->val;
+    return hashmap_put(map, k, val_produce_f(k));
+}
+
+bool hashmap_set_entry_free_func(const hashmap map, const void *k, free_func k_free_f, free_func v_free_f) {
     int h = hash(map->hash_f, k);
     int idx = _hashmap_cul_index(map->cap, h);
 
     hash_map_entry e = map->bucket[idx];
     while (e != NULL) {
-        if (map->k_eq_f(e->key, k))
-            return e->val;
+        if (map->k_eq_f(e->key, k)) {
+            e->k_free_f = k_free_f;
+            e->v_free_f = v_free_f;
+            return true;
+        }
         e = e->next;
     }
-    return NULL;
+    return false;
 }
 
 void _free_entry(const hashmap map, hash_map_entry e) {
@@ -200,7 +241,7 @@ void _free_entry(const hashmap map, hash_map_entry e) {
 /*
  * returned value may be invalid caused by v_free_func.
  */
-void *hashmap_remove(const hashmap map, void *k) {
+void *hashmap_remove(const hashmap map, const void *k) {
     int h = hash(map->hash_f, k);
     int idx = _hashmap_cul_index(map->cap, h);
 
@@ -208,10 +249,8 @@ void *hashmap_remove(const hashmap map, void *k) {
     hash_map_entry pe = NULL;
     while (e != NULL) {
         if (map->k_eq_f(e->key, k)) {
-            if (pe == NULL)
-                map->bucket[idx] = e->next;
-            else
-                pe->next = e->next;
+            if (pe == NULL) map->bucket[idx] = e->next;
+            else pe->next = e->next;
 
             void *val = e->val;
             _free_entry(map, e);
@@ -282,7 +321,6 @@ void hashmap_foreach(const hashmap map, const hashmap_itr itr) {
             if (itr->filter_f == NULL || itr->filter_f(e->key, e->val)) {
                 itr->foreach_f(e->key, e->val);
                 e = e->next;
-            } else
-                e = e->next;
+            } else e = e->next;
     }
 }
