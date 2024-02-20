@@ -63,11 +63,14 @@ void *hashmap_put(const hashmap map, const void *k, void *v);
 void *hashmap_put_if_absent(const hashmap map, const void *k, void *def_val);
 void *hashmap_put_if_absent_f(const hashmap map, const void *k, val_produce_func val_produce_f);
 bool  hashmap_set_entry_free_func(const hashmap map, const void *k, free_func k_free_f, free_func v_free_f);
+
+typedef bool (*filter_func)(const void *k, void *v);
 void *hashmap_remove(const hashmap map, const void *k);
+// return removed entry count
+uint  hashmap_remove_if(const hashmap map, filter_func filter_f);
 void  hashmap_clear(const hashmap map);
 void  hashmap_free(hashmap map);
 
-typedef bool (*filter_func)(const void *k, void *v);
 // return true means stop.
 typedef bool (*foreach_func)(const void *k, void *v);
 

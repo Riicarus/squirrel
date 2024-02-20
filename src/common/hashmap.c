@@ -299,6 +299,34 @@ void *hashmap_remove(const hashmap map, const void *k) {
     return NULL;
 }
 
+uint hashmap_remove_if(const hashmap map, filter_func filter_f) {
+    uint            cnt = 0;
+    hash_map_entry *b = map->bucket;
+    hash_map_entry  pe = NULL, e;
+
+    for (int i = 0; i < map->cap; i++, b++) {
+        if ((e = *b) == NULL) continue;
+
+        while (e != NULL) {
+            if (filter_f(e->key, e->val)) {
+                if (pe == NULL) map->bucket[i] = e->next;
+                else pe->next = e->next;
+
+                _free_entry(map, e);
+                e = e->next;
+                map->size -= 1;
+                cnt++;
+                continue;
+            }
+            pe = e;
+            e = e->next;
+        }
+    }
+
+    _hashmap_ensure_cap(map, 0);
+    return cnt;
+}
+
 void hashmap_clear(const hashmap map) {
     hash_map_entry *b = map->bucket;
     hash_map_entry  e, ne;

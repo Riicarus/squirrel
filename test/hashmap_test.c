@@ -11,8 +11,8 @@ bool my_foreach_func(const void *k, void *v) {
     return false;
 }
 
-int my_filter_func(const void *k, void *v) {
-    return str_eq_func((char *)k, "lang") || str_eq_func((char *)k, "my best friend") || str_eq_func((char *)v, "Linkin Park");
+bool my_filter_func(const void *k, void *v) {
+    return str_eq_func((char *)k, "def") || str_eq_func((char *)k, "java") || str_eq_func((char *)v, "fun");
 }
 
 void my_free_func(const void *o) {
@@ -128,6 +128,11 @@ extern int test_hashmap() {
     printf("%s\n", (char *)hashmap_get_or_default(map, "def", "another default"));
     printf("%s\n\n", (char *)hashmap_put_if_absent(map, "study", "good"));
     
+    printf("Size: %d, Cap: %d\n\n", map->size, map->cap);
+    print_hashmap(map);
+
+    printf("\n");
+    printf("remove count: %d\n", hashmap_remove_if(map, &my_filter_func));
     printf("Size: %d, Cap: %d\n\n", map->size, map->cap);
     print_hashmap(map);
 
