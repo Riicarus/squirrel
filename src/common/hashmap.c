@@ -311,16 +311,25 @@ void hashmap_itr_free(hashmap_itr itr) {
     itr = NULL;
 }
 
+void hashmap_itr_set_filter_f(const hashmap_itr itr, filter_func filter_f) {
+    itr->filter_f = filter_f;
+}
+
+void hashmap_itr_set_foreach_f(const hashmap_itr itr, foreach_func foreach_f) {
+    itr->foreach_f = foreach_f;
+}
+
 void hashmap_foreach(const hashmap map, const hashmap_itr itr) {
     hash_map_entry *b = map->bucket;
     hash_map_entry  e;
     for (int i = 0; i < map->cap; i++, b++) {
         if ((e = *b) == NULL) continue;
 
-        while (e != NULL)
+        while (e != NULL) {
             if (itr->filter_f == NULL || itr->filter_f(e->key, e->val)) {
-                itr->foreach_f(e->key, e->val);
+                if (itr->foreach_f(e->key, e->val)) return;
                 e = e->next;
             } else e = e->next;
+        }
     }
 }

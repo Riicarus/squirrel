@@ -5,8 +5,10 @@ int my_hash(const void *k) {
     return *((int *)k);
 }
 
-void my_foreach_func(const void *k, void *v) {
+bool my_foreach_func(const void *k, void *v) {
     printf("%s = %s\n", (char *)k, (char *)v);
+    // return str_eq_func(k, "Band");
+    return false;
 }
 
 int my_filter_func(const void *k, void *v) {

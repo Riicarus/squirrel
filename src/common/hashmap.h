@@ -66,7 +66,8 @@ void  hashmap_clear(const hashmap map);
 void  hashmap_free(hashmap map);
 
 typedef bool (*filter_func)(const void *k, void *v);
-typedef void (*foreach_func)(const void *k, void *v);
+// return true means stop.
+typedef bool (*foreach_func)(const void *k, void *v);
 
 typedef struct _hashmap_iterator {
     foreach_func foreach_f;
@@ -75,6 +76,8 @@ typedef struct _hashmap_iterator {
 
 hashmap_itr hashmap_itr_init(foreach_func foreach);
 void        hashmap_itr_free(hashmap_itr itr);
+void        hashmap_itr_set_filter_f(const hashmap_itr itr, filter_func filter_f);
+void        hashmap_itr_set_foreach_f(const hashmap_itr itr, foreach_func foreach_f);
 
 void hashmap_foreach(const hashmap map, const hashmap_itr itr);
 
