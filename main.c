@@ -1,6 +1,5 @@
 #include "src/common/hashmap.h"
 #include <stdio.h>
-#include <stdlib.h>
 
 int my_hash(void *k) {
     return *((int *)k);
@@ -12,6 +11,11 @@ void my_foreach_func(const void *k, void *v) {
 
 int my_filter_func(const void *k, void *v) {
     return str_eq_func((char *)k, "lang") || str_eq_func((char *)k, "my best friend") || str_eq_func((char *)v, "Linkin Park");
+}
+
+void my_free_func(void *o) {
+    printf("freed: %s\n", (char *)o);
+    // free(o);
 }
 
 void print_hashmap(const hashmap map) {
@@ -39,7 +43,9 @@ int main() {
     printf("Size of hash entry: %lu\n", sizeof(hash_map_entry));
     printf("Size of hash node entry: %lu\n", sizeof(struct _hash_map_entry));
 
-    hashmap map = hashmap_init(3, &str_hash_func, &str_eq_func);
+    hashmap map = hashmap_init(3, &str_hash_func, &str_eq_func, &str_eq_func);
+    hashmap_set_k_free_func(map, &my_free_func);
+    hashmap_set_v_free_func(map, &my_free_func);
     printf("Size: %d, Cap: %d, Factor: %f\n", map->size, map->cap, map->expand_factor);
     char *a = "hello";
     char *b = "world";
@@ -95,6 +101,29 @@ int main() {
     printf("\nafter remove:\n");
     hashmap_foreach(map, itr);
     printf("Size: %d, Cap: %d\n\n", map->size, map->cap);
+
+    hashmap_put(map, "study", "fun");
+    hashmap_put_f(map, "string", "this", &my_free_func, &my_free_func);
+    print_hashmap(map);
+    printf("Size: %d, Cap: %d\n\n", map->size, map->cap);
+
+    printf("%d\n", hashmap_contains_key(map, "str"));
+    printf("%d\n", hashmap_contains_key(map, "string"));
+    printf("%d\n", hashmap_contains_key(map, "study"));
+    printf("%d\n", hashmap_contains_value(map, "Mao mao"));
+    printf("%d\n", hashmap_contains_value(map, "this"));
+    printf("%d\n", hashmap_contains_value(map, "Band"));
+
+    printf("removed: %s, %s\n", "string", (char *)hashmap_remove(map, "string"));
+
+    printf("\n");
+    hashmap_clear(map);
+    print_hashmap(map);
+    printf("Size: %d, Cap: %d\n\n", map->size, map->cap);
+
+    printf("%s, %s, %s, %s\n", a, b, c, d);
+    printf("%d\n", hashmap_contains_key(map, "study"));
+    printf("%d\n", hashmap_contains_value(map, "Mao mao"));
 
     hashmap_free(map);
     hashmap_itr_free(itr);
