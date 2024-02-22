@@ -1,12 +1,12 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include "position.h"
-#include <stdio.h>
+#include "c_hashmap.h"
 
 typedef unsigned char token;
+typedef hashmap       reserved_tk_map;
 
-enum token {
+enum {
     // reserved words
     // type
     INT,
@@ -95,9 +95,7 @@ enum token {
     ILLEGAL
 };
 
-token lookUpReserved() {
-        
-}
+token lookup_reserved_tk();
 
 #define INT_LIT 0
 #define FLOAT_LIT 1

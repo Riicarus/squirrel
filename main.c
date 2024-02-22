@@ -1,5 +1,8 @@
-int test_hashmap();
+#include <stdio.h>
+#include "token.h"
 
 int main() {
-    test_hashmap();    
+    printf("squirrel !\n");
+    printf("%d\n", lookup_reserved_tk());
+    return 0;
 }

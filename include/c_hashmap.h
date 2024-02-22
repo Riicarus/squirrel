@@ -1,5 +1,5 @@
-#ifndef HASH_MAP_H
-#define HASH_MAP_H
+#ifndef C_HASH_MAP_H
+#define C_HASH_MAP_H
 
 #include <stdlib.h>
 #include <stdbool.h>
@@ -115,7 +115,8 @@ typedef bool (*foreach_func)(const void *k, void *v);
  * _hashmap_iterator should only used to iterator the hash map entries, it's not supposed to update entries and DO NOT
  * remove entries using iterator(so we did not provide any removal functions in _hashmap_iterator, till now).
  *
- * _hashmap_iterator has no direct relationship with _hashmap except you need a _hashmap to iterator through. Just use it more like in a functional programming environment.
+ * _hashmap_iterator has no direct relationship with _hashmap except you need a _hashmap to iterator through. Just use
+ * it more like in a functional programming environment.
  */
 typedef struct _hashmap_iterator {
     foreach_func foreach_f;
