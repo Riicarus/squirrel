@@ -1,11 +1,11 @@
 #ifndef POSITION_H
 #define POSITION_H
 
-struct postion {
+typedef struct _postion {
     char *filename;
     int   off;
     int   row;
     int   col;
-};
+} position;
 
 #endif
