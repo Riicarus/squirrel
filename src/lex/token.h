@@ -94,75 +94,75 @@ typedef enum {
     _illegal,
 } token;
 
-typedef struct _tk {
+typedef struct _tk_mapping {
     char *name;
     token token;
-} tk;
+} tk_mapping;
 
-static tk *tk_new(char *name, token token) {
-    tk *t = (tk *)calloc(1, sizeof(tk));
+static tk_mapping *tk_mapping_new(char *name, token token) {
+    tk_mapping *t = (tk_mapping *)calloc(1, sizeof(tk_mapping));
     t->name = name;
     t->token = token;
     return t;
 }
 
-static void *get_tk_name(void *ele) {
-    return ((tk *)ele)->name;
+static void *get_tk_mapping_name(void *ele) {
+    return ((tk_mapping *)ele)->name;
 }
 
-static void *get_tk_token(void *ele) {
-    return &((tk *)ele)->token;
+static void *get_tk_mapping_token(void *ele) {
+    return &((tk_mapping *)ele)->token;
 }
 
-static void tk_token_update(void *ele1, void *ele2) {
-    ((tk *)ele1)->token = ((tk *)ele2)->token;
+static void tk_mapping_token_update(void *ele1, void *ele2) {
+    ((tk_mapping *)ele1)->token = ((tk_mapping *)ele2)->token;
 }
 
 static hashmap reserved_tk_map = NULL;
 
 // clang-format off
-#define TK(name_str) (tk){(name_str)}
-#define ADD_TK(T) hashmap_put(reserved_tk_map, tk_new((#T), (_##T)))
-#define GET_TK(name_str) (token *)hashmap_get(reserved_tk_map, &TK(name_str))
+#define TK_MAPPING(name_str) (tk_mapping){(name_str)}
+#define ADD_TK_MAPPING(T) hashmap_put(reserved_tk_map, tk_mapping_new((#T), (_##T)))
+#define GET_TK_MAPPING(name_str) (token *)hashmap_get(reserved_tk_map, &TK_MAPPING(name_str))
 // clang-format on
 
 static void reserved_tk_map_init() {
     reserved_tk_map = hashmap_new(
-        _const << 1, &get_tk_name, &get_tk_token, &tk_token_update, &str_hash_func, &str_eq_func, &int_eq_func);
+        _const << 1, &get_tk_mapping_name, &get_tk_mapping_token, &tk_mapping_token_update, &str_hash_func, &str_eq_func, &int_eq_func);
 
-    ADD_TK(int);
-    ADD_TK(float);
-    ADD_TK(bool);
-    ADD_TK(char);
-    ADD_TK(string);
-    ADD_TK(func);
-    ADD_TK(void);
-    ADD_TK(type);
-    ADD_TK(struct);
-    ADD_TK(new);
-    ADD_TK(sizeof);
-    ADD_TK(true);
-    ADD_TK(false);
-    ADD_TK(null);
-    ADD_TK(for);
-    ADD_TK(while);
-    ADD_TK(if);
-    ADD_TK(else);
-    ADD_TK(elseif);
-    ADD_TK(switch);
-    ADD_TK(case);
-    ADD_TK(default);
-    ADD_TK(continue);
-    ADD_TK(break);
-    ADD_TK(return);
-    ADD_TK(pkg);
-    ADD_TK(import);
-    ADD_TK(const);
+    ADD_TK_MAPPING(int);
+    ADD_TK_MAPPING(float);
+    ADD_TK_MAPPING(bool);
+    ADD_TK_MAPPING(char);
+    ADD_TK_MAPPING(string);
+    ADD_TK_MAPPING(func);
+    ADD_TK_MAPPING(void);
+    ADD_TK_MAPPING(type);
+    ADD_TK_MAPPING(struct);
+    ADD_TK_MAPPING(new);
+    ADD_TK_MAPPING(sizeof);
+    ADD_TK_MAPPING(true);
+    ADD_TK_MAPPING(false);
+    ADD_TK_MAPPING(null);
+    ADD_TK_MAPPING(for);
+    ADD_TK_MAPPING(while);
+    ADD_TK_MAPPING(if);
+    ADD_TK_MAPPING(else);
+    ADD_TK_MAPPING(elseif);
+    ADD_TK_MAPPING(switch);
+    ADD_TK_MAPPING(case);
+    ADD_TK_MAPPING(default);
+    ADD_TK_MAPPING(continue);
+    ADD_TK_MAPPING(break);
+    ADD_TK_MAPPING(return);
+    ADD_TK_MAPPING(pkg);
+    ADD_TK_MAPPING(import);
+    ADD_TK_MAPPING(const);
 };
 
 static token lookup_reserved_tk(char *s) {
     if (reserved_tk_map == NULL) return _not_exist;
-    token *t = GET_TK(s);
+    token *t = GET_TK_MAPPING(s);
     return t == NULL ? _not_exist : *t;
 }
 

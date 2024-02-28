@@ -55,6 +55,10 @@ void lexer_init(char *filepath, bool debug) {
     lexer->off = -1;
     lexer->row = 0;
     lexer->col = 0;
+
+    lexer->tk = -1;
+    lexer->lexeme = NULL;
+    lexer->lit_kind = -1;
 }
 
 void lexer_free() {
@@ -66,11 +70,14 @@ void lexer_free() {
     lexer = NULL;
 }
 
-token next() {
-    // _next_skip_white_space();
+void next() {
+    _next_skip_white_space();
     position pos = (position){lexer->filename, lexer->off, lexer->row, lexer->col};
 
-    return _illegal;
+    // reserved words/identifier
+    if ((lexer->ch >= 'a' && lexer->ch <= 'z') || (lexer->ch >= 'A' && lexer->ch <= 'Z') || lexer->ch == '_') {
+        _scan_word();
+    }
 }
 
 static void _next_skip_white_space() {
@@ -101,11 +108,11 @@ static void _newline() {
     lexer->col = 0;
 }
 
-static char *_scan_word() {
+static bool _scan_word() {
     char *word = (char *)calloc(MAX_WORD_LEN, sizeof(char));
     if (word == NULL) {
         perror("Lexer: fail to calloc memory for word");
-        return NULL;
+        return true;
     }
 
     word[MAX_WORD_LEN - 1] = '\0';
@@ -115,37 +122,39 @@ static char *_scan_word() {
         if (*w == '\0') {
             printf("Lexer: word reach max length of %d", MAX_WORD_LEN);
             free(word);
-            return word;
+            return false;
         }
         *w = lexer->ch;
         w++;
         _next_ch();
     }
 
+    lexer->lexeme = word;
     _contract();
-    return word;
+    return true;
 }
 
-static char *_scan_number() {
-    char *word = (char *)calloc(MAX_NUMBER_LEN, sizeof(char));
-    if (word == NULL) {
+static bool _scan_number() {
+    char *number = (char *)calloc(MAX_NUMBER_LEN, sizeof(char));
+    if (number == NULL) {
         perror("Lexer: fail to calloc memory for number");
-        return NULL;
+        return false;
     }
 
-    word[MAX_NUMBER_LEN - 1] = '\0';
-    char *w = word;
+    number[MAX_NUMBER_LEN - 1] = '\0';
+    char *n = number;
     while (lexer->ch >= '0' && lexer->ch <= '9') {
-        if (*w == '\0') {
+        if (*n == '\0') {
             printf("Lexer: number reach max length of %d", MAX_NUMBER_LEN);
-            free(word);
-            return word;
+            free(number);
+            return false;
         }
-        *w = lexer->ch;
-        w++;
+        *n = lexer->ch;
+        n++;
         _next_ch();
     }
 
+    lexer->lexeme = number;
     _contract();
-    return word;
+    return true;
 }

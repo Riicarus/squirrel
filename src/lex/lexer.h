@@ -21,6 +21,10 @@ struct _lexer {
     int  off;
     int  row;
     int  col;
+
+    token tk;
+    char *lexeme;
+    lit_kind lit_kind;
 };
 
 static struct _lexer *lexer = &(struct _lexer){};
@@ -29,7 +33,7 @@ void lexer_init(char *filepath, bool debug);
 
 void lexer_free();
 
-token next();
+void next();
 
 static void _next_skip_white_space();
 
@@ -39,8 +43,8 @@ static void _contract();
 
 static void _newline();
 
-static char *_scan_word();
+static bool _scan_word();
 
-static char *_scan_number();
+static bool _scan_number();
 
 #endif
