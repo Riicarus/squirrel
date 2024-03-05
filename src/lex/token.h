@@ -3,6 +3,7 @@
 
 #include "c_hashmap.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 typedef enum {
     // reserved words
@@ -127,8 +128,13 @@ static hashmap reserved_tk_map = NULL;
 // clang-format on
 
 static void reserved_tk_map_init() {
-    reserved_tk_map = hashmap_new(
-        _const << 1, &get_tk_mapping_name, &get_tk_mapping_token, &tk_mapping_token_update, &str_hash_func, &str_eq_func, &int_eq_func);
+    reserved_tk_map = hashmap_new(_const << 1,
+                                  &get_tk_mapping_name,
+                                  &get_tk_mapping_token,
+                                  &tk_mapping_token_update,
+                                  &str_hash_func,
+                                  &str_eq_func,
+                                  &int_eq_func);
 
     ADD_TK_MAPPING(int);
     ADD_TK_MAPPING(float);
@@ -161,11 +167,12 @@ static void reserved_tk_map_init() {
 };
 
 static token lookup_reserved_tk(char *s) {
-    if (reserved_tk_map == NULL) return _not_exist;
+    if (reserved_tk_map == NULL) reserved_tk_map_init();
+    if (reserved_tk_map == NULL) printf("Lexer: could not init reserved token map");
     token *t = GET_TK_MAPPING(s);
     return t == NULL ? _not_exist : *t;
 }
 
-typedef enum { int_lit, float_lit, bool_lit, char_lit, string_lit, null_lit } lit_kind;
+typedef enum { int_lit = 1, float_lit, bool_lit, char_lit, string_lit, null_lit } lit_kind;
 
 #endif

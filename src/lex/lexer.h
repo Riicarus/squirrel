@@ -3,12 +3,10 @@
 
 #include "token.h"
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 
 #define MAX_LINE_LEN 1024
 #define MAX_WORD_LEN 256
-#define MAX_NUMBER_LEN 16
+#define MAX_NUMBER_LEN 32
 
 struct _lexer {
     bool debug;
@@ -22,18 +20,20 @@ struct _lexer {
     int  row;
     int  col;
 
-    token tk;
-    char *lexeme;
+    token    tk;
     lit_kind lit_kind;
+    char     lexeme[MAX_LINE_LEN];
+
+    char *bad_msg;
 };
 
-static struct _lexer *lexer = &(struct _lexer){};
+extern struct _lexer *lexer;
 
 void lexer_init(char *filepath, bool debug);
 
 void lexer_free();
 
-void next();
+token lexer_next();
 
 static void _next_skip_white_space();
 
@@ -45,6 +45,6 @@ static void _newline();
 
 static bool _scan_word();
 
-static bool _scan_number();
+static bool _scan_number(bool float_part);
 
 #endif
