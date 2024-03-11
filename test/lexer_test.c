@@ -1,7 +1,6 @@
+#include "lex.h"
 #include "token.h"
-#include "lexer.h"
 #include <stdio.h>
-#include <string.h>
 
 void token_test() {
     reserved_tk_map_init();
@@ -11,16 +10,22 @@ void token_test() {
     printf("test get reserved token error(not exist): %d\n", (t = lookup_reserved_tk("error")) == _not_exist ? -1 : t);
 }
 
+extern char *filename;
+extern int row;
+extern int col;
+extern char lexeme[MAX_LINE_LEN];
+extern char *bad_msg;
+
 void lexer_test() {
-    lexer_init("/home/riicarus/proj/c_proj/squirrel/test/program.sl", true);
+    if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/program.sl", true)) printf("lexer init failed");
     token tk;
     char  pos_msg[32];
-    while ((tk = lexer_next()) != _eof && tk != _illegal) {
-        sprintf(pos_msg, "%s:%d:%d", lexer->filename, lexer->row, lexer->col);
-        printf("%-32s %-4d %-20s %s\n", pos_msg, lexer->tk, lexer->lexeme, lexer->bad_msg);
+    while ((tk = lex_next()) != _eof && tk != _illegal) {
+        sprintf(pos_msg, "%s:%d:%d", filename, row, col);
+        printf("%-32s %-4d %-20s %s\n", pos_msg, tk, lexeme, bad_msg);
     }
 
     // print first illegal
-    sprintf(pos_msg, "%s:%d:%d", lexer->filename, lexer->row, lexer->col);
-    printf("%-32s %-4d %-20s %s\n", pos_msg, lexer->tk, lexer->lexeme, lexer->bad_msg);
+    sprintf(pos_msg, "%s:%d:%d", filename, row, col);
+    printf("%-32s %-4d %-20s %s\n", pos_msg, tk, lexeme, bad_msg);
 }

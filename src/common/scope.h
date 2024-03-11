@@ -8,7 +8,7 @@
 typedef struct _scope {
     struct _scope *parent;
     struct _scope *children;
-    hashmap        elements;
+    hashmap        name_element_map;
 
     position start, end;
     char    *name;

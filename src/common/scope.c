@@ -9,7 +9,7 @@ scope *scope_new() {
                                            &str_hash_func,
                                            &str_eq_func,
                                            &element_name_mapping_element_eq_f);
-    s->elements = elements;
+    s->name_element_map = elements;
     s->parent = s;
     s->collecting = true;
     return s;
@@ -17,7 +17,7 @@ scope *scope_new() {
 
 void scope_free(scope *s) {
     if (s->name != NULL) free(s->name);
-    if (s->elements != NULL) hashmap_free(s->elements);
+    if (s->name_element_map != NULL) hashmap_free(s->name_element_map);
     free(s);
     s = NULL;
 }

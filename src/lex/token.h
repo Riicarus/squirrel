@@ -15,11 +15,6 @@ typedef enum {
     _string,
     _func,
     _void,
-    // functionality
-    _type,
-    _struct,
-    _new,
-    _sizeof,
     // value
     _true,
     _false,
@@ -36,10 +31,6 @@ typedef enum {
     _continue,
     _break,
     _return,
-    // scope
-    _pkg,
-    _import,
-    _const,
 
     // lit
     _ident,
@@ -128,7 +119,7 @@ static hashmap reserved_tk_map = NULL;
 // clang-format on
 
 static void reserved_tk_map_init() {
-    reserved_tk_map = hashmap_new(_const << 1,
+    reserved_tk_map = hashmap_new(_return << 1,
                                   &get_tk_mapping_name,
                                   &get_tk_mapping_token,
                                   &update_tk_mapping_token,
@@ -143,10 +134,6 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(string);
     ADD_TK_MAPPING(func);
     ADD_TK_MAPPING(void);
-    ADD_TK_MAPPING(type);
-    ADD_TK_MAPPING(struct);
-    ADD_TK_MAPPING(new);
-    ADD_TK_MAPPING(sizeof);
     ADD_TK_MAPPING(true);
     ADD_TK_MAPPING(false);
     ADD_TK_MAPPING(null);
@@ -161,9 +148,6 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(continue);
     ADD_TK_MAPPING(break);
     ADD_TK_MAPPING(return);
-    ADD_TK_MAPPING(pkg);
-    ADD_TK_MAPPING(import);
-    ADD_TK_MAPPING(const);
 };
 
 static token lookup_reserved_tk(char *s) {
