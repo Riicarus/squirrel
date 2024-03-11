@@ -115,7 +115,7 @@ static void *get_tk_mapping_token(void *ele) {
     return &((tk_mapping *)ele)->token;
 }
 
-static void tk_mapping_token_update(void *ele1, void *ele2) {
+static void update_tk_mapping_token(void *ele1, void *ele2) {
     ((tk_mapping *)ele1)->token = ((tk_mapping *)ele2)->token;
 }
 
@@ -131,7 +131,7 @@ static void reserved_tk_map_init() {
     reserved_tk_map = hashmap_new(_const << 1,
                                   &get_tk_mapping_name,
                                   &get_tk_mapping_token,
-                                  &tk_mapping_token_update,
+                                  &update_tk_mapping_token,
                                   &str_hash_func,
                                   &str_eq_func,
                                   &int_eq_func);
