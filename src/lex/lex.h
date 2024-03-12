@@ -8,6 +8,17 @@
 #define MAX_WORD_LEN 256
 #define MAX_NUMBER_LEN 32
 
+extern bool     debug;
+extern char    *filename;
+extern char     ch;
+extern int      off;
+extern int      row;
+extern int      col;
+extern token    tk;
+extern lit_kind lk;
+extern char     lexeme[MAX_LINE_LEN];
+extern char    *bad_msg;
+
 bool  lex_init(char *filepath, bool debug);
 token lex_next();
 

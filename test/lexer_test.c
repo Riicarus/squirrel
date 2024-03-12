@@ -10,12 +10,6 @@ void token_test() {
     printf("test get reserved token error(not exist): %d\n", (t = lookup_reserved_tk("error")) == _not_exist ? -1 : t);
 }
 
-extern char *filename;
-extern int row;
-extern int col;
-extern char lexeme[MAX_LINE_LEN];
-extern char *bad_msg;
-
 void lexer_test() {
     if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/program.sl", true)) printf("lexer init failed");
     token tk;

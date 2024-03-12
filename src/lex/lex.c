@@ -1,19 +1,18 @@
 #include "lex.h"
 #include <string.h>
 
-bool debug;
-
-char         *filename;
-char         *buffer;
-unsigned long buffer_len;
-char          ch;
-int           off;
-int           row;
-int           col;
-token         tk;
-lit_kind      lk;
-char          lexeme[MAX_LINE_LEN];
-char         *bad_msg;
+bool                 debug;
+char                *filename;
+static char         *buffer;
+static unsigned long buffer_len;
+char                 ch;
+int                  off;
+int                  row;
+int                  col;
+token                tk;
+lit_kind             lk;
+char                 lexeme[MAX_LINE_LEN];
+char                *bad_msg;
 
 bool lex_init(char *filepath, bool debug) {
     if (filepath == NULL) perror("lexer: can not find source file");
