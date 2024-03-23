@@ -5,28 +5,28 @@
 #include "position.h"
 #include <stdbool.h>
 
-typedef struct _scope {
-    struct _scope *parent;
-    struct _scope *children;
-    hashmap        name_element_map;
+struct Scope {
+    struct Scope *parent;
+    struct Scope *children;
+    hashmap       name_element_map;
 
-    position start, end;
-    char    *name;
-    bool     isFunc;
-    bool     collecting;
-} scope;
+    struct Position start, end;
+    char           *name;
+    bool            isFunc;
+    bool            collecting;
+};
 
-typedef struct _element {
-    scope *root_scope;
-    scope *cur_scope;
+struct Element {
+    struct Scope *root_scope;
+    struct Scope *cur_scope;
 
-    position pos;
-    char    *name;
-} element;
+    struct Position pos;
+    char           *name;
+};
 
 struct _element_name_mapping {
-    char    *name;
-    element *element;
+    char           *name;
+    struct Element *element;
 };
 
 static void *get_element_name_mapping_name(void *ele) {
@@ -42,17 +42,17 @@ static void update_element_name_mapping_element(void *ele1, void *ele2) {
 }
 
 static bool element_name_mapping_element_eq_f(void *v1, void *v2) {
-    return str_eq_func(((element *)v1)->name, ((element *)v2)->name);
+    return str_eq_func(((struct Element *)v1)->name, ((struct Element *)v2)->name);
 }
 
-scope *scope_new();
-void   scope_free(scope *s);
+struct Scope *scope_new();
+void          scope_free(struct Scope *s);
 
-element *scope_lookup(char *name);
-element *scope_lookup_all(char *name);
-void     scope_addEle(char *name, element *e);
+struct Element *scope_lookup(char *name);
+struct Element *scope_lookup_all(char *name);
+void            scope_addEle(char *name, struct Element *e);
 
-scope *scope_enter(char *name);
-scope *scope_exit();
+struct Scope *scope_enter(char *name);
+struct Scope *scope_exit();
 
 #endif

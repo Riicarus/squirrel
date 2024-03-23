@@ -1,18 +1,18 @@
 #include "lex.h"
 #include <string.h>
 
-bool                 debug;
-char                *filename;
-static char         *buffer;
-static unsigned long buffer_len;
-char                 ch;
-int                  off;
-int                  row;
-int                  col;
-token                tk;
-lit_kind             lk;
-char                 lexeme[MAX_LINE_LEN];
-char                *bad_msg;
+bool                 debug;                // is in debug mode
+char                *filename;             // current parsing file name
+static char         *buffer;               // buffer of read file
+static unsigned long buffer_len;           // length of buffer
+char                 ch;                   // current parsing char, inits & ends with EOF
+int                  off;                  // current offset of buffer, starts from 0
+int                  row;                  // current row of file, starts from 1
+int                  col;                  // current col of file, starts from 0
+enum Token           tk;                   // current parsed token
+enum LitKind         lk;                   // lit kind, available only when tk is _lit
+char                 lexeme[MAX_LINE_LEN]; // lexeme string, available only when tk is _lit or _ident
+char                *lex_bad_msg;          // error message
 
 bool lex_init(char *filepath, bool debug) {
     if (filepath == NULL) perror("lexer: can not find source file");
@@ -74,17 +74,17 @@ bool lex_init(char *filepath, bool debug) {
     return true;
 }
 
-token lex_next() {
+enum Token lex_next() {
     _next_skip_white_space();
 
     // reserved words/identifier
     if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z') || ch == '_') {
         if (!_scan_word()) {
-            bad_msg = "reach max length of word";
+            lex_bad_msg = "reach max length of word";
             return tk = _illegal;
         }
 
-        token tk = lookup_reserved_tk(lexeme);
+        enum Token tk = lookup_reserved_tk(lexeme);
         if (tk == _not_exist) return tk = _ident;
         else return tk = tk;
     }
@@ -93,7 +93,7 @@ token lex_next() {
     // int / float
     if (ch >= '0' && ch <= '9') {
         if (!_scan_number(false)) {
-            bad_msg = "reach max length of number";
+            lex_bad_msg = "reach max length of number";
             return tk = _illegal;
         }
 
@@ -103,13 +103,13 @@ token lex_next() {
             is_float = true;
             _next_ch();
             if (!_scan_number(true)) {
-                bad_msg = "reach max length of number";
+                lex_bad_msg = "reach max length of number";
                 return tk = _illegal;
             }
         }
 
         if (!is_float) _contract();
-        lk = is_float ? float_lit : int_lit;
+        lk = is_float ? float_lk : int_lk;
         return tk = _lit;
     }
     // string
@@ -119,13 +119,13 @@ token lex_next() {
         while (off + offset < buffer_len && buffer[off + offset] != '"') {
             if (s - lexeme == MAX_LINE_LEN - 1) {
                 off = offset - 1;
-                bad_msg = "reach max length of line";
+                lex_bad_msg = "reach max length of line";
                 return tk = _illegal;
             }
             // string can only be declared in one line
             if (buffer[off + offset] == '\n') {
                 off = offset - 1;
-                bad_msg = "illegal line end in string literal";
+                lex_bad_msg = "illegal line end in string literal";
                 return tk = _illegal;
             }
 
@@ -139,18 +139,18 @@ token lex_next() {
 
         // if no right '"' matched, make it illegal token
         if (off >= buffer_len) {
-            bad_msg = "illegal line end in string literal";
+            lex_bad_msg = "illegal line end in string literal";
             return tk = _illegal;
         }
 
-        lk = string_lit;
+        lk = string_lk;
         return tk = _lit;
     }
     // char
     if (ch == '\'') {
         _next_ch();
         if (ch == '\'') {
-            bad_msg = "empty char literal";
+            lex_bad_msg = "empty char literal";
             return tk = _illegal;
         }
 
@@ -159,16 +159,17 @@ token lex_next() {
         _next_ch();
         if (ch != '\'') {
             _contract();
-            bad_msg = "unclosed char literal";
+            lex_bad_msg = "unclosed char literal";
             return tk = _illegal;
         }
 
-        lk = char_lit;
+        lk = char_lk;
         return tk = _lit;
     }
 
     // symbols
     // non-prefix char symbols
+    if (ch == '@') return tk = _at;
     if (ch == '~') return tk = _not;
     if (ch == '*') return tk = _mul;
     if (ch == '%') return tk = _rem;
@@ -201,7 +202,7 @@ token lex_next() {
             return lex_next();
         }
 
-        bad_msg = "illegal token";
+        lex_bad_msg = "illegal token";
         return tk = _illegal;
     }
     // LT, LE, SHL: <, <=, <<
@@ -257,7 +258,7 @@ token lex_next() {
             while (buffer[off + offset] != '\n') {
                 if (s - lexeme == MAX_LINE_LEN - 1) {
                     off = offset - 1;
-                    bad_msg = "reach max length of line";
+                    lex_bad_msg = "reach max length of line";
                     return tk = _illegal;
                 }
 
@@ -293,14 +294,13 @@ token lex_next() {
     _contract();
     lexeme[0] = pch;
     lexeme[1] = '\0';
-    bad_msg = "illegal token";
+    lex_bad_msg = "illegal token";
     return tk = _illegal;
 }
 
 static void _next_skip_white_space() {
-    do {
-        _next_ch();
-    } while (ch == ' ');
+    do _next_ch();
+    while (ch == ' ');
 }
 
 static void _next_ch() {

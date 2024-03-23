@@ -1,8 +1,8 @@
 #include "scope.h"
 #include <stdlib.h>
 
-scope *scope_new() {
-    scope  *s = calloc(1, sizeof(scope));
+struct Scope *scope_new() {
+    struct Scope  *s = calloc(1, sizeof(struct Scope));
     hashmap elements = hashmap_new_default(&get_element_name_mapping_name,
                                            &get_element_name_mapping_element,
                                            &update_element_name_mapping_element,
@@ -15,7 +15,7 @@ scope *scope_new() {
     return s;
 }
 
-void scope_free(scope *s) {
+void scope_free(struct Scope *s) {
     if (s->name != NULL) free(s->name);
     if (s->name_element_map != NULL) hashmap_free(s->name_element_map);
     free(s);

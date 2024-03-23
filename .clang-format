@@ -36,7 +36,7 @@ AlignAfterOpenBracket: Align
 # - None: 不做处理, 即保留开发者的代码
 # - Left: 左对齐
 # - Right: 右对齐
-AlignArrayOfStructures: None
+AlignArrayOfStructures: Left
 
 # 连续赋值语句的对齐，即多个赋值语句连续出现时的对齐策略配置, 包含多个子配置项
 AlignConsecutiveAssignments:
@@ -118,7 +118,7 @@ AllowShortLambdasOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: AllIfsAndElse
 
 # 是否允许 loop 语句体跟 loop 语句共行, true/false , 建议 false
-AllowShortLoopsOnASingleLine: false
+AllowShortLoopsOnASingleLine: true
 
 # Deprecated, 废弃定义, 设置为 None 即可
 AlwaysBreakAfterDefinitionReturnType: None

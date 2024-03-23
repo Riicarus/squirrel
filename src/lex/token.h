@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-typedef enum {
+enum Token {
     // reserved words
     // type
     _int = 1,
@@ -25,9 +25,6 @@ typedef enum {
     _if,
     _else,
     _elseif,
-    _switch,
-    _case,
-    _default,
     _continue,
     _break,
     _return,
@@ -64,6 +61,8 @@ typedef enum {
     _land,
     _lor,
     _lnot,
+    // array
+    _at,
 
     // delimeter
     _lparen,
@@ -84,38 +83,117 @@ typedef enum {
     _eof,
     _not_exist,
     _illegal,
-} token;
+};
 
-typedef struct _tk_mapping {
-    char *name;
-    token token;
-} tk_mapping;
+struct {
+    char *symbol;
+} tk_symbols[_illegal + 1] = {"",
+                              "int",
+                              "float",
+                              "bool",
+                              "char",
+                              "string",
+                              "func",
+                              "void",
+                              // value
+                              "true",
+                              "false",
+                              "null",
+                              // control
+                              "for",
+                              "while",
+                              "if",
+                              "else",
+                              "elseif",
+                              "continue",
+                              "break",
+                              "return",
 
-static tk_mapping *tk_mapping_new(char *name, token token) {
-    tk_mapping *t = (tk_mapping *)calloc(1, sizeof(tk_mapping));
+                              // lit
+                              "ident",
+                              "lit",
+
+                              // operator
+                              // rel
+                              "eq",
+                              "ne",
+                              "lt",
+                              "le",
+                              "gt",
+                              "ge",
+                              // arith
+                              "add",
+                              "sub",
+                              "mul",
+                              "quo",
+                              "rem",
+                              "and",
+                              "or",
+                              "xor",
+                              "not",
+                              "shl",
+                              "shr",
+                              // assign
+                              "assign",
+                              "inc",
+                              "dec",
+                              // logic
+                              "land",
+                              "lor",
+                              "lnot",
+                              // array
+                              "at",
+
+                              // delimeter
+                              "lparen",
+                              "rparen",
+                              "lbracket",
+                              "rbracket",
+                              "lbrace",
+                              "rbrace",
+                              "rarrow",
+                              "comma",
+                              "period",
+                              "semi",
+                              "colon",
+                              "ques",
+                              "comment",
+
+                              // others
+                              "eof",
+                              "not_exist",
+                              "illegal"};
+
+struct TokenMapping {
+    char      *name;
+    enum Token token;
+};
+
+static struct TokenMapping *tk_mapping_new(char *name, enum Token token) {
+    struct TokenMapping *t = (struct TokenMapping *)calloc(1, sizeof(struct TokenMapping));
     t->name = name;
     t->token = token;
     return t;
 }
 
 static void *get_tk_mapping_name(void *ele) {
-    return ((tk_mapping *)ele)->name;
+    return ((struct TokenMapping *)ele)->name;
 }
 
 static void *get_tk_mapping_token(void *ele) {
-    return &((tk_mapping *)ele)->token;
+    return &((struct TokenMapping *)ele)->token;
 }
 
 static void update_tk_mapping_token(void *ele1, void *ele2) {
-    ((tk_mapping *)ele1)->token = ((tk_mapping *)ele2)->token;
+    ((struct TokenMapping *)ele1)->token = ((struct TokenMapping *)ele2)->token;
 }
 
 static hashmap reserved_tk_map = NULL;
 
 // clang-format off
-#define TK_MAPPING(name_str) (tk_mapping){(name_str)}
+#define TK_MAPPING(name_str) (struct TokenMapping){(name_str)}
 #define ADD_TK_MAPPING(T) hashmap_put(reserved_tk_map, tk_mapping_new((#T), (_##T)))
-#define GET_TK_MAPPING(name_str) (token *)hashmap_get(reserved_tk_map, &TK_MAPPING(name_str))
+#define GET_TK_MAPPING(name_str) (enum Token *)hashmap_get(reserved_tk_map, &TK_MAPPING(name_str))
 // clang-format on
 
 static void reserved_tk_map_init() {
@@ -142,21 +220,18 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(if);
     ADD_TK_MAPPING(else);
     ADD_TK_MAPPING(elseif);
-    ADD_TK_MAPPING(switch);
-    ADD_TK_MAPPING(case);
-    ADD_TK_MAPPING(default);
     ADD_TK_MAPPING(continue);
     ADD_TK_MAPPING(break);
     ADD_TK_MAPPING(return);
 };
 
-static token lookup_reserved_tk(char *s) {
+static enum Token lookup_reserved_tk(char *s) {
     if (reserved_tk_map == NULL) reserved_tk_map_init();
     if (reserved_tk_map == NULL) printf("Lexer: could not init reserved token map");
-    token *t = GET_TK_MAPPING(s);
+    enum Token *t = GET_TK_MAPPING(s);
     return t == NULL ? _not_exist : *t;
 }
 
-typedef enum { int_lit = 1, float_lit, bool_lit, char_lit, string_lit, null_lit } lit_kind;
+enum LitKind { int_lk, float_lk, bool_lk, char_lk, string_lk, null_lk };
 
 #endif

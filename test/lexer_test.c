@@ -16,10 +16,10 @@ void lexer_test() {
     char  pos_msg[32];
     while ((tk = lex_next()) != _eof && tk != _illegal) {
         sprintf(pos_msg, "%s:%d:%d", filename, row, col);
-        printf("%-32s %-4d %-20s %s\n", pos_msg, tk, lexeme, bad_msg);
+        printf("%-32s %-4d %-20s %s\n", pos_msg, tk, lexeme, lex_bad_msg);
     }
 
     // print first illegal
     sprintf(pos_msg, "%s:%d:%d", filename, row, col);
-    printf("%-32s %-4d %-20s %s\n", pos_msg, tk, lexeme, bad_msg);
+    printf("%-32s %-4d %-20s %s\n", pos_msg, tk, lexeme, lex_bad_msg);
 }
