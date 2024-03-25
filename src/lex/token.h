@@ -8,7 +8,7 @@
 enum Token {
     // reserved words
     // type
-    _int = 1,
+    _int,
     _float,
     _bool,
     _char,
@@ -21,27 +21,28 @@ enum Token {
     _null,
     // control
     _for,
-    _while,
     _if,
     _else,
     _elseif,
     _continue,
     _break,
     _return,
+    // functional
+    _sizeof,
+    _array,
 
     // lit
     _ident,
     _lit,
 
     // operator
-    // rel
+    // binary
     _eq,
     _ne,
     _lt,
     _le,
     _gt,
     _ge,
-    // arith
     _add,
     _sub,
     _mul,
@@ -50,17 +51,17 @@ enum Token {
     _and,
     _or,
     _xor,
-    _not,
     _shl,
     _shr,
+    _land,
+    _lor,
+    // unary
+    _not,
+    _lnot,
     // assign
     _assign,
     _inc,
     _dec,
-    // logic
-    _land,
-    _lor,
-    _lnot,
     // array
     _at,
 
@@ -85,88 +86,29 @@ enum Token {
     _illegal,
 };
 
-struct {
-    char *symbol;
-} tk_symbols[_illegal + 1] = {"",
-                              "int",
-                              "float",
-                              "bool",
-                              "char",
-                              "string",
-                              "func",
-                              "void",
-                              // value
-                              "true",
-                              "false",
-                              "null",
-                              // control
-                              "for",
-                              "while",
-                              "if",
-                              "else",
-                              "elseif",
-                              "continue",
-                              "break",
-                              "return",
+#define BASIC_TYPE_TOKEN_NUMBER 6
+#define UNARY_OP_TOKEN_NUMBER 2
+#define BINARY_OP_TOKEN_NUMBER 19
+#define CTRL_START_TOKEN_NUMBER 5
+#define EXPR_START_TOKEN_NUMBER 7
+#define BASIC_LIT_TOKEN_NUMBER 4
 
-                              // lit
-                              "ident",
-                              "lit",
+extern enum Token basic_type_tokens[BASIC_TYPE_TOKEN_NUMBER];
+extern enum Token unary_op_tokens[UNARY_OP_TOKEN_NUMBER];
+extern enum Token binary_op_tokens[BINARY_OP_TOKEN_NUMBER];
+extern enum Token ctrl_start_tokens[CTRL_START_TOKEN_NUMBER];
+extern enum Token expr_start_tokens[EXPR_START_TOKEN_NUMBER];
+extern enum Token basic_lit_tokens[BASIC_LIT_TOKEN_NUMBER];
 
-                              // operator
-                              // rel
-                              "eq",
-                              "ne",
-                              "lt",
-                              "le",
-                              "gt",
-                              "ge",
-                              // arith
-                              "add",
-                              "sub",
-                              "mul",
-                              "quo",
-                              "rem",
-                              "and",
-                              "or",
-                              "xor",
-                              "not",
-                              "shl",
-                              "shr",
-                              // assign
-                              "assign",
-                              "inc",
-                              "dec",
-                              // logic
-                              "land",
-                              "lor",
-                              "lnot",
-                              // array
-                              "at",
+struct TokenSymbol {
+        char *symbol;
+};
 
-                              // delimeter
-                              "lparen",
-                              "rparen",
-                              "lbracket",
-                              "rbracket",
-                              "lbrace",
-                              "rbrace",
-                              "rarrow",
-                              "comma",
-                              "period",
-                              "semi",
-                              "colon",
-                              "ques",
-                              "comment",
-
-                              // others
-                              "eof",
-                              "not_exist",
-                              "illegal"};
+extern struct TokenSymbol tk_symbols[];
 
 struct TokenMapping {
-    char      *name;
-    enum Token token;
+        char      *name;
+        enum Token token;
 };
 
 static struct TokenMapping *tk_mapping_new(char *name, enum Token token) {
@@ -188,7 +130,7 @@ static void update_tk_mapping_token(void *ele1, void *ele2) {
     ((struct TokenMapping *)ele1)->token = ((struct TokenMapping *)ele2)->token;
 }
 
-static hashmap reserved_tk_map = NULL;
+extern hashmap reserved_tk_map;
 
 // clang-format off
 #define TK_MAPPING(name_str) (struct TokenMapping){(name_str)}
@@ -197,13 +139,8 @@ static hashmap reserved_tk_map = NULL;
 // clang-format on
 
 static void reserved_tk_map_init() {
-    reserved_tk_map = hashmap_new(_return << 1,
-                                  &get_tk_mapping_name,
-                                  &get_tk_mapping_token,
-                                  &update_tk_mapping_token,
-                                  &str_hash_func,
-                                  &str_eq_func,
-                                  &int_eq_func);
+    reserved_tk_map =
+        hashmap_new((_return + 1) << 1, &get_tk_mapping_name, &get_tk_mapping_token, &update_tk_mapping_token, &str_hash_func, &str_eq_func, &int_eq_func);
 
     ADD_TK_MAPPING(int);
     ADD_TK_MAPPING(float);
@@ -216,13 +153,14 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(false);
     ADD_TK_MAPPING(null);
     ADD_TK_MAPPING(for);
-    ADD_TK_MAPPING(while);
     ADD_TK_MAPPING(if);
     ADD_TK_MAPPING(else);
     ADD_TK_MAPPING(elseif);
     ADD_TK_MAPPING(continue);
     ADD_TK_MAPPING(break);
     ADD_TK_MAPPING(return);
+    ADD_TK_MAPPING(sizeof);
+    ADD_TK_MAPPING(array);
 };
 
 static enum Token lookup_reserved_tk(char *s) {
@@ -233,5 +171,11 @@ static enum Token lookup_reserved_tk(char *s) {
 }
 
 enum LitKind { int_lk, float_lk, bool_lk, char_lk, string_lk, null_lk };
+
+struct LitKindSymbol {
+    char *symbol;
+};
+
+extern struct LitKindSymbol lit_kind_symbols[];
 
 #endif

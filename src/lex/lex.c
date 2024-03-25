@@ -14,7 +14,7 @@ enum LitKind         lk;                   // lit kind, available only when tk i
 char                 lexeme[MAX_LINE_LEN]; // lexeme string, available only when tk is _lit or _ident
 char                *lex_bad_msg;          // error message
 
-bool lex_init(char *filepath, bool debug) {
+bool lex_init(char *filepath, bool _debug) {
     if (filepath == NULL) perror("lexer: can not find source file");
 
     FILE *f = fopen(filepath, "r");
@@ -34,7 +34,7 @@ bool lex_init(char *filepath, bool debug) {
     filename = (char *)calloc(filename_len, sizeof(char));
     strncpy(filename, full_name, filename_len);
 
-    if (debug) printf("Lexer: find file: %s\n", filename);
+    if (_debug) printf("Lexer: find file: %s\n", filename);
 
     // remember to free buffer if failed
 
@@ -58,10 +58,10 @@ bool lex_init(char *filepath, bool debug) {
     }
     fclose(f);
 
-    if (debug) printf("Lexer: file content:\n%s\n", buffer);
+    if (_debug) printf("Lexer: file content:\n%s\n", buffer);
     buffer_len = buffer_size;
 
-    debug = debug;
+    debug = _debug;
     ch = EOF;
     off = -1;
     row = 1;
@@ -84,9 +84,9 @@ enum Token lex_next() {
             return tk = _illegal;
         }
 
-        enum Token tk = lookup_reserved_tk(lexeme);
-        if (tk == _not_exist) return tk = _ident;
-        else return tk = tk;
+        enum Token _tk = lookup_reserved_tk(lexeme);
+        if (_tk == _not_exist) return tk = _ident;
+        else return tk = _tk;
     }
 
     // lit
@@ -242,10 +242,31 @@ enum Token lex_next() {
         _contract();
         return tk = _add;
     }
-    // SUB, DEC, RARROW: -, --, ->
+    // SUB, DEC, RARROW, NEGATIVE_NUMBER: -, --, ->
     if (pch == '-') {
         if (ch == '-') return tk = _dec;
         if (ch == '>') return tk = _rarrow;
+        if (ch >= '0' && ch <= '9') {
+            if (!_scan_number(false)) {
+                lex_bad_msg = "reach max length of number";
+                return tk = _illegal;
+            }
+
+            bool is_float = false;
+            _next_ch();
+            if (ch == '.') {
+                is_float = true;
+                _next_ch();
+                if (!_scan_number(true)) {
+                    lex_bad_msg = "reach max length of number";
+                    return tk = _illegal;
+                }
+            }
+
+            if (!is_float) _contract();
+            lk = is_float ? float_lk : int_lk;
+            return tk = _lit;
+        }
 
         _contract();
         return tk = _sub;

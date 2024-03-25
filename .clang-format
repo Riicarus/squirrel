@@ -97,7 +97,7 @@ AllowAllArgumentsOnNextLine: true
 AllowAllParametersOfDeclarationOnNextLine: true
 AllowShortEnumsOnASingleLine: true
 AllowShortBlocksOnASingleLine: Never
-AllowShortCaseLabelsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
 
 # 允许短的函数放在同一行
 # - None: 
@@ -189,7 +189,7 @@ BreakAfterJavaFieldAnnotations: false
 # 字面字符串是否换行, true
 BreakStringLiterals: true
 # 代码列字符上限
-ColumnLimit: 120
+ColumnLimit: 160
 # pragma注释
 CommentPragmas: '^ IWYU pragma:'
 # 注释关键字对齐(const/volatile), 建议Leave
@@ -266,9 +266,9 @@ IncludeCategories:
 IncludeIsMainRegex: '(Test)?$'
 IncludeIsMainSourceRegex: ''
 # 缩进访问控制
-IndentAccessModifiers: false
+IndentAccessModifiers: true
 # 缩进case语句, 建议 false
-IndentCaseLabels: false
+IndentCaseLabels: true
 # 缩进case body, 建议true
 IndentCaseBlocks: true
 # 缩进goto标签

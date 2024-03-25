@@ -5,21 +5,23 @@ Squirrel is a simple compiled language.
 ## Lex Tokens
 
 ```txt
-int float bool char string func void array
+int float bool char string func void
 
 true false null
 
-for while if else elseif continue break return
+for if else elseif continue break return
+
+sizeof array
 
 identifier lit
 
 == != > >= < <=
 
-+ - * / % & | ^ ~ << >>
++ - * / % & | ^ << >> && ||
 
-= ++ --
+~ !
 
-&& || !
+= ++ -- @
 
 ( ) [ ] { } -> , . ; : ? //
 
@@ -31,12 +33,12 @@ eof, not_exist, illegal
 ### Program
 
 ```txt
-Program     :   [ { Statement ";" }... ]
+Program         :   CodeBlock
 
-Statement   :   Decl
-            |   Expr
-            |   Ctrl
-            |   CodeBlock
+Statement       :   Decl
+                |   Expr
+                |   Ctrl
+                |   CodeBlock
 
 CodeBlock   :   "{" [ { Statement ";" }... ] "}"
 ```
@@ -44,107 +46,107 @@ CodeBlock   :   "{" [ { Statement ";" }... ] "}"
 ### Declaration
 
 ```txt
-Decl        :   FieldDecl
-            |   FuncDecl
+Decl            :   FieldDecl
+                |   FuncDecl
 
-FieldDecl   :   Type identifier [ "=" Expr ]
+FieldDecl       :   TypeDecl identifier [ "=" Expr ]
 
-FuncDecl    :   "func" identifier "(" [ { FieldDecl "," }... ] ")" Type CodeBlock
+FuncDecl        :   "func" identifier "(" [ { FieldDecl "," }... ] ")" TypeDecl CodeBlock
 
-Type        :   BasicType
-            |   ArrayType
+TypeDecl        :   BasicTypeDecl
+                |   ArrayTypeDecl
 
-BasicType   :   "int"
-            |   "float"
-            |   "bool"
-            |   "char"
-            |   "string"
-            |   "void"
+BasicTypeDecl   :   "int"
+                |   "float"
+                |   "bool"
+                |   "char"
+                |   "string"
+                |   "void"
 
-ArrayType   :   "@" BasicType
+ArrayTypeDecl   :   "@" BasicTypeDecl
 ```
 
 ### Expression
 
 ```txt
-Expr        :   BinaryExpr
+Expr            :   BinaryExpr
 
-BinaryExpr  :   UnaryExpr
-            |   BinaryExpr  BinaryOp BinaryExpr
+BinaryExpr      :   UnaryExpr
+                |   BinaryExpr BinaryOp BinaryExpr
 
-BinaryOp    :   "==" | "!=" | "<" | "<=" | ">" | ">="
-            |   "+"| "-" | "*" | "/" | "%" | "|" | "^" | "<<" | ">>"
-            |   "="
-            |   "&&" | "||"
+BinaryOp        :   "==" | "!=" | "<" | "<=" | ">" | ">="
+                |   "+"| "-" | "*" | "/" | "%" | "|" | "^" | "<<" | ">>"
+                |   "="
+                |   "&&" | "||"
 
-UnaryExpr   :   PrimaryExpr
-            |   UnaryOp UnaryExpr
+UnaryExpr       :   PrimaryExpr
+                |   UnaryOp UnaryExpr
 
-UnaryOp     :   "!" | "~"
+UnaryOp         :   "!" | "~"
 
-PrimaryExpr :   Operand
-            |   PrimaryExpr Index
-            |   PrimaryExpr Arguments
-            |   PrimaryExpr { "++" | "--" }
-            |   { "++" | "--" } PrimaryExpr
-            |   "sizeof" "(" PrimaryExpr ")"
+PrimaryExpr     :   Operand
+                |   PrimaryExpr Index
+                |   PrimaryExpr Arguments
+                |   PrimaryExpr { "++" | "--" }
+                |   { "++" | "--" } PrimaryExpr
+                |   "sizeof" "(" PrimaryExpr ")"
 
-Operand     :   Literal
-            |   identifier
-            |   "(" Expr ")"
+Operand         :   Literal
+                |   identifier
+                |   "(" Expr ")"
 
-Literal     :   BasicLit
-            |   ArrayLit
+Literal         :   BasicLit
+                |   ArrayLit
 
-BasicLit    :   int_lit
-            |   float_lit
-            |   char_lit
-            |   string_lit
-            |   "true"
-            |   "false"
-            |   "null"
+BasicLit        :   int_lit
+                |   float_lit
+                |   char_lit
+                |   string_lit
+                |   "true"
+                |   "false"
+                |   "null"
 
-ArrayLit    :   "@" "{" [ { BasicLit "," }... ] "}"
+ArrayLit        :   "array" "{" [ { BasicLit "," }... ] "}"
 
-Index       :   "[" Expr "]"
+Index           :   "[" Expr "]"
 
-Arguments   :   "(" [ { Exprs "," }... ] ")"
+Arguments       :   "(" [ { Expr "," }... ] ")"
 ```
 
 ### Control
 
 ```txt
-Ctrl        :   Break
-            |   Continue
-            |   Return
-            |   If
-            |   For
+Ctrl            :   Break
+                |   Continue
+                |   Return
+                |   If
+                |   For
 
-Break       :   "break"
+Break           :   "break"
 
-Continue    :   "continue"
+Continue        :   "continue"
 
-Return      :   "return" [ Expr ]
+Return          :   "return" [ Expr ]
 ```
 
 #### If Statement
 
 ```txt
-If          :   "if" "(" Expr ")" Statement [ Else ]
+If              :   "if" "(" Expr ")" CodeBlock [ Else ]
 
-Else        :   [ ElseIf... ] [ EndElse ]
+Else            :   [ ElseIf... ] [ EndElse ]
 
-ElseIf      :   "elseif" "(" Expr ")" Statement
+ElseIf          :   "elseif" "(" Expr ")" CodeBlock
 
-EndElse     :   "else" Statement
+EndElse         :   "else" CodeBlock
 ```
 
 #### For Statement
 
 ```txt
-For         :   "for" "(" [ ForInit ] ";" [ Expr ] ";" [ ForUpdate ] ")" { Statement | ";" }
+For             :   "for" "(" [ ForInit ] ";" [ Expr ] ";" [ ForUpdate ] ")" CodeBlock
 
-ForInit     :   { { FieldDecl | Expr } "," }...
+ForInit         :   { { FieldDecl | Expr } "," }...
 
-ForUpdate   :   { Expr "," }...
+ForUpdate       :   { Expr "," }...
 ```
