@@ -10,8 +10,6 @@ enum NodeClass {
     // expr
     BASIC_LIT,
     ARRAY_LIT,
-    ARR_EXPR,
-    ASSIGN_EXPR,
     CALL_EXPR,
     INC_EXPR,
     INDEX_EXPR,
@@ -90,7 +88,6 @@ struct AstNode {
                 struct BasicTypeDecl *basic_type_decl;
                 struct BasicLit      *basic_lit;
                 struct ArrayLit      *array_lit;
-                struct ArrayExpr     *array_expr;
                 struct CallExpr      *call_expr;
                 struct IncExpr       *inc_expr;
                 struct IndexExpr     *index_expr;
@@ -153,11 +150,6 @@ struct ArrayLit {
         struct AstNode **elements;
         unsigned int     size;
         unsigned int     cap;
-};
-
-struct ArrayExpr {
-        struct ArrayTypeDecl *arr_type_decl;
-        struct AstNode       *array_lit;
 };
 
 struct CallExpr {

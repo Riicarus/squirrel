@@ -97,7 +97,7 @@ static void _list(char *context, struct AstNode *node, enum Token start, enum To
     _want(close);
 }
 
-static void _ensure_ast_node_array_size(struct AstNode **arr, unsigned int *size, unsigned int *cap) {
+static void _ensure_ast_node_array_size(struct AstNode ***arr, unsigned int *size, unsigned int *cap) {
     if (*size == *cap) {
         struct AstNode **new_arr = calloc(*cap << 1, sizeof(struct AstNode *));
         if (new_arr == NULL) {
@@ -105,9 +105,9 @@ static void _ensure_ast_node_array_size(struct AstNode **arr, unsigned int *size
             _error_exit();
         }
 
-        memcpy(new_arr, arr, *size * sizeof(struct AstNode *));
-        free(arr);
-        arr = new_arr;
+        memcpy(new_arr, *arr, *size * sizeof(struct AstNode *));
+        free(*arr);
+        *arr = new_arr;
         *cap <<= 1;
     }
 }
@@ -162,7 +162,9 @@ struct AstNode *_basic_lit() {
     }
 
     struct BasicLit *lit = NEW_AST_NODE(BasicLit);
+    // handle basic lit kind of keywords
     if (_is(_true) || _is(_false)) lit->lk = bool_lk;
+    else if (_is(_null)) lit->lk = null_lk;
     else lit->lk = lk;
     lit->value = calloc(strlen(lexeme) + 1, sizeof(char));
     if (!lit->value) {
@@ -181,7 +183,7 @@ struct AstNode *_basic_lit() {
 
 static bool _parse_array_lit_elements(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
     struct ArrayLit *lit = node->data.array_lit;
-    _ensure_ast_node_array_size(lit->elements, &lit->size, &lit->cap);
+    _ensure_ast_node_array_size(&lit->elements, &lit->size, &lit->cap);
     lit->elements[lit->size++] = _basic_lit();
     return false;
 }
@@ -235,7 +237,7 @@ struct AstNode *_operand() {
 
 static bool _parse_func_call_params(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
     struct CallExpr *call_expr = node->data.call_expr;
-    _ensure_ast_node_array_size(call_expr->params, &call_expr->param_size, &call_expr->param_cap);
+    _ensure_ast_node_array_size(&call_expr->params, &call_expr->param_size, &call_expr->param_cap);
     call_expr->params[call_expr->param_size++] = _expr();
     return false;
 }
@@ -492,7 +494,7 @@ struct AstNode *_field_decl() {
         operation->op = ASSIGN;
         operation->y = _expr();
         struct AstNode *t = NEW_AST_NODE(AstNode);
-        t->class = ASSIGN_EXPR;
+        t->class = OPERATION;
         t->pos = pos;
         t->data.operation = operation;
         field_decl->assign_expr = t;
@@ -507,7 +509,7 @@ struct AstNode *_field_decl() {
 
 static bool _parse_func_param_decl_elements(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
     struct FuncDecl *func_decl = node->data.func_decl;
-    _ensure_ast_node_array_size(func_decl->param_decls, &func_decl->param_size, &func_decl->param_cap);
+    _ensure_ast_node_array_size(&func_decl->param_decls, &func_decl->param_size, &func_decl->param_cap);
     func_decl->param_decls[func_decl->param_size++] = _field_decl();
     return false;
 }
@@ -651,7 +653,7 @@ struct AstNode *_if_ctrl() {
 
 static bool _parse_for_inits(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
     struct ForCtrl *for_ctrl = node->data.for_ctrl;
-    _ensure_ast_node_array_size(for_ctrl->inits, &for_ctrl->inits_size, &for_ctrl->inits_cap);
+    _ensure_ast_node_array_size(&for_ctrl->inits, &for_ctrl->inits_size, &for_ctrl->inits_cap);
 
     if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER) || _is(_at)) for_ctrl->inits[for_ctrl->inits_size++] = _field_decl();
     else for_ctrl->inits[for_ctrl->inits_size++] = _expr();
@@ -660,7 +662,7 @@ static bool _parse_for_inits(struct AstNode *node, const enum Token _tk, const e
 
 static bool _parse_for_updates(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
     struct ForCtrl *for_ctrl = node->data.for_ctrl;
-    _ensure_ast_node_array_size(for_ctrl->updates, &for_ctrl->updates_size, &for_ctrl->updates_cap);
+    _ensure_ast_node_array_size(&for_ctrl->updates, &for_ctrl->updates_size, &for_ctrl->updates_cap);
     for_ctrl->updates[for_ctrl->updates_size++] = _expr();
     return false;
 }
@@ -770,7 +772,7 @@ struct AstNode *_stmt() {
 
 static bool _parse_code_block_statements(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
     struct CodeBlock *code_block = node->data.code_block;
-    _ensure_ast_node_array_size(code_block->stmts, &code_block->size, &code_block->cap);
+    _ensure_ast_node_array_size(&code_block->stmts, &code_block->size, &code_block->cap);
     code_block->stmts[code_block->size++] = _stmt();
     return false;
 }
