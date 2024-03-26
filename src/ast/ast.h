@@ -67,13 +67,11 @@ struct OpPriority {
 
 extern struct OpPriority op_priority_map[];
 
-// clang-format off
 #define CMP_PRIORITY(op1, op2) binary_op_map[(op1)] > binary_op_map[(op2)]
-#define NEW_AST_NODE(T) calloc(1, sizeof(struct T))
-// clang-format on
 
 // base ast node
 struct AstNode {
+        int              id;
         struct Position *pos;
         bool             reachable;
 
@@ -103,6 +101,8 @@ struct AstNode {
         } data;
 };
 
+struct AstNode *create_ast_node();
+
 // stmt
 struct CodeBlock {
         struct AstNode **stmts;
@@ -112,6 +112,7 @@ struct CodeBlock {
 
 struct CodeFile {
         struct AstNode *code_block;
+        struct Scope   *scope;
 };
 
 struct EmptyStmt { };
@@ -218,6 +219,6 @@ struct ForCtrl {
         struct AstNode  *body;
 };
 
-void print_node(struct AstNode *self, int level, char *hint);
+void print_node(struct AstNode *node, int level, char *hint);
 
 #endif

@@ -12,9 +12,9 @@ set(C_HASHMAP_INCLUDE ${PROJECT_SOURCE_DIR}/include)
 # lib must be files, instead of dirs, the same as src
 set(C_HASHMAP_LIB ${PROJECT_SOURCE_DIR}/lib/libc_hashmap.so)
 
-file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/common/*.c ${PROJECT_SOURCE_DIR}/src/lex/*.c ${PROJECT_SOURCE_DIR}/src/syntax/*.c ${PROJECT_SOURCE_DIR}/src/ast/*.c)
+file(GLOB SRC ${PROJECT_SOURCE_DIR}/src/common/*.c ${PROJECT_SOURCE_DIR}/src/lex/*.c ${PROJECT_SOURCE_DIR}/src/syntax/*.c ${PROJECT_SOURCE_DIR}/src/ast/*.c ${PROJECT_SOURCE_DIR}/src/semantic/*.c)
 
-set(SRC_INCLUDE ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/src/lex ${PROJECT_SOURCE_DIR}/src/syntax ${PROJECT_SOURCE_DIR}/src/ast)
+set(SRC_INCLUDE ${PROJECT_SOURCE_DIR}/src/common ${PROJECT_SOURCE_DIR}/src/lex ${PROJECT_SOURCE_DIR}/src/syntax ${PROJECT_SOURCE_DIR}/src/ast ${PROJECT_SOURCE_DIR}/src/semantic)
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 

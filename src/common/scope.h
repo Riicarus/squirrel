@@ -1,58 +1,40 @@
 #ifndef SCOPE_H
 #define SCOPE_H
 
-#include "c_hashmap.h"
 #include "position.h"
 #include <stdbool.h>
 
 struct Scope {
-    struct Scope *parent;
-    struct Scope *children;
-    hashmap       name_element_map;
+        char          *name;         // name of scope
+        bool           is_func;      // is scope a func scope
+        struct Symbol *first_symbol; // first symbol in symbol list
+        struct Symbol *last_symbol;  // last symbol in symbol list
 
-    struct Position start, end;
-    char           *name;
-    bool            isFunc;
-    bool            collecting;
+        struct Scope *parent;            // parent scope
+        struct Scope *first_child_scope; // first scope in children scope list
+        struct Scope *last_child_scope;  // last scope in children scope list
+        struct Scope *next;              // next scope in the same scope level
 };
 
-struct Element {
-    struct Scope *root_scope;
-    struct Scope *cur_scope;
+struct Symbol {
+        struct Type *type; // type of symbol
+        char        *name; // name of symbol
 
-    struct Position pos;
-    char           *name;
+        struct Scope    *scope; // which scope the symbol exists
+        struct Position *pos;   // position of the symbol
+        struct Symbol   *next;  // next symbol in the same scope level
 };
 
-struct _element_name_mapping {
-    char           *name;
-    struct Element *element;
-};
+void           free_scope(struct Scope *s);
+void           free_symbol(struct Symbol *s);
+struct Scope  *create_scope(struct Scope *parent, char *name);
+struct Symbol *create_symbol(struct Type *type, char *name, struct Scope *scope, struct Position *pos);
 
-static void *get_element_name_mapping_name(void *ele) {
-    return ((struct _element_name_mapping *)ele)->name;
-}
+struct Symbol *scope_lookup_symbol(struct Scope *s, char *name);
+struct Symbol *scope_lookup_symbol_from_all(struct Scope *s, char *name);
+void           scope_add_symbol(struct Scope *s, struct Symbol *symbol);
 
-static void *get_element_name_mapping_element(void *ele) {
-    return ((struct _element_name_mapping *)ele)->element;
-}
-
-static void update_element_name_mapping_element(void *ele1, void *ele2) {
-    ((struct _element_name_mapping *)ele1)->element = ((struct _element_name_mapping *)ele2)->element;
-}
-
-static bool element_name_mapping_element_eq_f(void *v1, void *v2) {
-    return str_eq_func(((struct Element *)v1)->name, ((struct Element *)v2)->name);
-}
-
-struct Scope *scope_new();
-void          scope_free(struct Scope *s);
-
-struct Element *scope_lookup(char *name);
-struct Element *scope_lookup_all(char *name);
-void            scope_addEle(char *name, struct Element *e);
-
-struct Scope *scope_enter(char *name);
-struct Scope *scope_exit();
+struct Scope *enter_scope(struct Scope *s, char *name);
+struct Scope *exit_scope(struct Scope *s);
 
 #endif

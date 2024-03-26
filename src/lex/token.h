@@ -112,7 +112,7 @@ struct TokenMapping {
 };
 
 static struct TokenMapping *tk_mapping_new(char *name, enum Token token) {
-    struct TokenMapping *t = (struct TokenMapping *)calloc(1, sizeof(struct TokenMapping));
+    struct TokenMapping *t = calloc(1, sizeof(struct TokenMapping));
     t->name = name;
     t->token = token;
     return t;

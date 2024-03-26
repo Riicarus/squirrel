@@ -31,7 +31,7 @@ bool lex_init(char *filepath, bool _debug) {
         fclose(f);
     }
     int filename_len = strlen(full_name) - strlen(suffix) - 1;
-    filename = (char *)calloc(filename_len, sizeof(char));
+    filename = calloc(filename_len + 1, sizeof(char));
     strncpy(filename, full_name, filename_len);
 
     if (_debug) printf("Lexer: find file: %s\n", filename);
@@ -44,7 +44,7 @@ bool lex_init(char *filepath, bool _debug) {
     while (fgets(line, sizeof(line), f) != NULL) {
         size_t line_len = strlen(line);
         // +1 for null terminator
-        char  *new_buffer = (char *)realloc(buffer, buffer_size + line_len + 1);
+        char  *new_buffer = realloc(buffer, buffer_size + line_len + 1);
         if (new_buffer == NULL) {
             free(buffer);
             perror("Lexer: fail to realloc memory");

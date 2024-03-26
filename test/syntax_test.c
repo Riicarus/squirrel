@@ -1,9 +1,15 @@
 #include "syntax.h"
 #include "lex.h"
+#include "semantic.h"
 #include <stdio.h>
 
 void syntax_test() {
     if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/test_lex.sl", true)) printf("lexer init failed");
     struct AstNode *x = parse();
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nAST:\n");
+
     print_node(x, 0, NULL);
+
+    manage_scope(x, NULL, false);
 }

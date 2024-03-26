@@ -1,3 +1,4 @@
+#include "global.h"
 #include "syntax.h"
 #include "position.h"
 #include "lex.h"
@@ -59,11 +60,6 @@ static bool _got(enum Token _tk) {
 
 static void _want(enum Token _tk) {
     if (!_got(_tk)) {
-        // if (syntax_bad_msg == NULL) syntax_bad_msg = calloc(MAX_BAD_MSG_LEN, sizeof(char));
-        // if (syntax_bad_msg == NULL) {
-        //     printf("no enough memory");
-        //     _error_exit();
-        // }
         sprintf(syntax_bad_msg, "expect %s, but get %s", tk_symbols[_tk].symbol, tk_symbols[tk].symbol);
         _error_exit();
     }
@@ -128,7 +124,7 @@ struct AstNode *_name_expr() {
         _error_exit();
     }
 
-    struct NameExpr *name_expr = NEW_AST_NODE(NameExpr);
+    struct NameExpr *name_expr = CREATE_STRUCT_P(NameExpr);
     name_expr->value = calloc(strlen(lexeme) + 1, sizeof(char));
     if (!name_expr->value) {
         strcpy(syntax_bad_msg, "no enough memory");
@@ -136,7 +132,7 @@ struct AstNode *_name_expr() {
     }
     strcpy(name_expr->value, lexeme);
 
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->pos = new_position(filename, off, row, col);
     x->class = NAME_EXPR;
     x->data.name_expr = name_expr;
@@ -161,7 +157,7 @@ struct AstNode *_basic_lit() {
         _error_exit();
     }
 
-    struct BasicLit *lit = NEW_AST_NODE(BasicLit);
+    struct BasicLit *lit = CREATE_STRUCT_P(BasicLit);
     // handle basic lit kind of keywords
     if (_is(_true) || _is(_false)) lit->lk = bool_lk;
     else if (_is(_null)) lit->lk = null_lk;
@@ -173,7 +169,7 @@ struct AstNode *_basic_lit() {
     }
     strcpy(lit->value, lexeme);
 
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = BASIC_LIT;
     x->pos = new_position(filename, off, row, col);
     x->data.basic_lit = lit;
@@ -195,11 +191,11 @@ struct AstNode *_array_lit() {
     _debug("array lit");
     _want(_array);
 
-    struct ArrayLit *lit = NEW_AST_NODE(ArrayLit);
+    struct ArrayLit *lit = CREATE_STRUCT_P(ArrayLit);
     lit->elements = calloc(8, sizeof(struct AstNode *));
     lit->size = 0;
     lit->cap = 8;
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = ARRAY_LIT;
     x->pos = new_position(filename, off, row, col);
     x->data.array_lit = lit;
@@ -263,14 +259,14 @@ struct AstNode *_primary_expr(struct AstNode *x) {
         switch (tk) {
             case _inc:
             case _dec: {
-                struct IncExpr *inc_expr = NEW_AST_NODE(IncExpr);
+                struct IncExpr *inc_expr = CREATE_STRUCT_P(IncExpr);
                 inc_expr->is_inc = _is(_inc);
                 inc_expr->is_pre = true;
                 struct Position *pos = new_position(filename, off, row, col);
                 _syntax_next();
                 inc_expr->x = _primary_expr(NULL);
 
-                struct AstNode *t = NEW_AST_NODE(AstNode);
+                struct AstNode *t = create_ast_node();
                 t->class = INC_EXPR;
                 t->pos = pos;
                 t->data.inc_expr = inc_expr;
@@ -278,14 +274,14 @@ struct AstNode *_primary_expr(struct AstNode *x) {
                 break;
             }
             case _sizeof: {
-                struct SizeExpr *size_expr = NEW_AST_NODE(SizeExpr);
+                struct SizeExpr *size_expr = CREATE_STRUCT_P(SizeExpr);
                 struct Position *pos = new_position(filename, off, row, col);
                 _syntax_next();
                 _want(_lparen);
                 size_expr->x = _primary_expr(NULL);
                 _want(_rparen);
 
-                struct AstNode *t = NEW_AST_NODE(AstNode);
+                struct AstNode *t = create_ast_node();
                 t->class = SIZE_EXPR;
                 t->pos = pos;
                 t->data.size_expr = size_expr;
@@ -307,12 +303,12 @@ struct AstNode *_primary_expr(struct AstNode *x) {
                     strcpy(syntax_bad_msg, "expect operand");
                     _error_exit();
                 }
-                struct IndexExpr *index_expr = NEW_AST_NODE(IndexExpr);
+                struct IndexExpr *index_expr = CREATE_STRUCT_P(IndexExpr);
                 index_expr->x = x;
                 index_expr->index = _expr();
                 _want(_rbracket);
 
-                struct AstNode *t = NEW_AST_NODE(AstNode);
+                struct AstNode *t = create_ast_node();
                 t->class = INDEX_EXPR;
                 t->pos = pos;
                 t->data.index_expr = index_expr;
@@ -322,12 +318,12 @@ struct AstNode *_primary_expr(struct AstNode *x) {
             case _lparen: {
                 _debug("func call");
 
-                struct CallExpr *call_expr = NEW_AST_NODE(CallExpr);
+                struct CallExpr *call_expr = CREATE_STRUCT_P(CallExpr);
                 call_expr->params = calloc(8, sizeof(struct AstNode *));
                 call_expr->param_size = 0;
                 call_expr->param_cap = 8;
                 call_expr->func_expr = x;
-                struct AstNode *t = NEW_AST_NODE(AstNode);
+                struct AstNode *t = create_ast_node();
                 t->class = CALL_EXPR;
                 t->pos = pos;
                 t->data.call_expr = call_expr;
@@ -337,13 +333,13 @@ struct AstNode *_primary_expr(struct AstNode *x) {
             }
             case _inc:
             case _dec: {
-                struct IncExpr *inc_expr = NEW_AST_NODE(IncExpr);
+                struct IncExpr *inc_expr = CREATE_STRUCT_P(IncExpr);
                 inc_expr->is_inc = _is(_inc);
                 inc_expr->is_pre = false;
                 inc_expr->x = x;
                 _syntax_next();
 
-                struct AstNode *t = NEW_AST_NODE(AstNode);
+                struct AstNode *t = create_ast_node();
                 t->class = INC_EXPR;
                 t->pos = pos;
                 t->data.inc_expr = inc_expr;
@@ -366,12 +362,12 @@ struct AstNode *_unary_expr() {
 
     if (_contains(unary_op_tokens, UNARY_OP_TOKEN_NUMBER)) {
         struct Position  *pos = new_position(filename, off, row, col);
-        struct Operation *operation = NEW_AST_NODE(Operation);
+        struct Operation *operation = CREATE_STRUCT_P(Operation);
         operation->op = (enum Operator)(tk - _eq);
         _syntax_next();
         operation->x = _unary_expr();
 
-        struct AstNode *x = NEW_AST_NODE(AstNode);
+        struct AstNode *x = create_ast_node();
         x->class = OPERATION;
         x->pos = pos;
         x->data.operation = operation;
@@ -399,13 +395,13 @@ struct AstNode *_binary_expr(struct AstNode *x, int p) {
     struct Position *pos = new_position(filename, off, row, col);
     while ((_contains(unary_op_tokens, UNARY_OP_TOKEN_NUMBER) || _contains(binary_op_tokens, BINARY_OP_TOKEN_NUMBER)) &&
            op_priority_map[(op = (enum Operator)(tk - _eq))].priority > p) {
-        struct Operation *operation = NEW_AST_NODE(Operation);
+        struct Operation *operation = CREATE_STRUCT_P(Operation);
         operation->op = op;
         operation->x = x;
         int tp = op_priority_map[op].priority;
         _syntax_next();
         operation->y = _binary_expr(NULL, tp);
-        struct AstNode *t = NEW_AST_NODE(AstNode);
+        struct AstNode *t = create_ast_node();
         t->class = OPERATION;
         t->pos = pos;
         t->data.operation = operation;
@@ -437,13 +433,13 @@ struct AstNode *_expr() {
 struct AstNode *_basic_type_decl() {
     _debug("basic type decl");
 
-    struct BasicTypeDecl *type_decl = NEW_AST_NODE(BasicTypeDecl);
+    struct BasicTypeDecl *type_decl = CREATE_STRUCT_P(BasicTypeDecl);
     if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER)) type_decl->symbol = tk_symbols[tk].symbol;
     else {
         strcpy(syntax_bad_msg, "illegal basic type");
         _error_exit();
     }
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = BASIC_TYPE_DECL;
     x->pos = new_position(filename, off, row, col);
     x->data.basic_type_decl = type_decl;
@@ -458,10 +454,10 @@ struct AstNode *_array_type_decl() {
     _debug("array type decl");
     _want(_at);
 
-    struct ArrayTypeDecl *array_type_decl = NEW_AST_NODE(ArrayTypeDecl);
+    struct ArrayTypeDecl *array_type_decl = CREATE_STRUCT_P(ArrayTypeDecl);
     array_type_decl->ele_type_decl = _basic_type_decl();
     ;
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = ARRAY_TYPE_DECL;
     x->pos = new_position(filename, off, row, col);
     x->data.array_type_decl = array_type_decl;
@@ -485,22 +481,22 @@ struct AstNode *_field_decl() {
     _debug("field decl");
 
     struct Position  *pos = new_position(filename, off, row, col);
-    struct FieldDecl *field_decl = NEW_AST_NODE(FieldDecl);
+    struct FieldDecl *field_decl = CREATE_STRUCT_P(FieldDecl);
     field_decl->type_decl = _type_decl();
     field_decl->name_expr = _name_expr();
     if (_got(_assign)) {
-        struct Operation *operation = NEW_AST_NODE(Operation);
+        struct Operation *operation = CREATE_STRUCT_P(Operation);
         operation->x = field_decl->name_expr;
         operation->op = ASSIGN;
         operation->y = _expr();
-        struct AstNode *t = NEW_AST_NODE(AstNode);
+        struct AstNode *t = create_ast_node();
         t->class = OPERATION;
         t->pos = pos;
         t->data.operation = operation;
         field_decl->assign_expr = t;
     }
 
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = FIELD_DECL;
     x->pos = pos;
     x->data.field_decl = field_decl;
@@ -520,10 +516,12 @@ static bool _parse_func_param_decl_elements(struct AstNode *node, const enum Tok
 struct AstNode *_func_decl() {
     _debug("func decl");
     _want(_func);
-    struct FuncDecl *func_decl = NEW_AST_NODE(FuncDecl);
+    struct FuncDecl *func_decl = CREATE_STRUCT_P(FuncDecl);
     func_decl->name_expr = _name_expr();
     func_decl->param_decls = calloc(8, sizeof(struct AstNode *));
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    func_decl->param_size = 0;
+    func_decl->param_cap = 8;
+    struct AstNode *x = create_ast_node();
     x->class = FUNC_DECL;
     x->pos = new_position(filename, off, row, col);
     x->data.func_decl = func_decl;
@@ -550,8 +548,8 @@ struct AstNode *_decl() {
 struct AstNode *_break_ctrl() {
     _debug("break");
 
-    struct BreakCtrl *break_ctrl = NEW_AST_NODE(BreakCtrl);
-    struct AstNode   *x = NEW_AST_NODE(AstNode);
+    struct BreakCtrl *break_ctrl = CREATE_STRUCT_P(BreakCtrl);
+    struct AstNode   *x = create_ast_node();
     x->class = BREAK_CTRL;
     x->pos = new_position(filename, off, row, col);
     x->data.break_ctrl = break_ctrl;
@@ -565,8 +563,8 @@ struct AstNode *_break_ctrl() {
 struct AstNode *_continue_ctrl() {
     _debug("continue");
 
-    struct ContinueCtrl *continue_ctrl = NEW_AST_NODE(ContinueCtrl);
-    struct AstNode      *x = NEW_AST_NODE(AstNode);
+    struct ContinueCtrl *continue_ctrl = CREATE_STRUCT_P(ContinueCtrl);
+    struct AstNode      *x = create_ast_node();
     x->class = CONTINUE_CTRL;
     x->pos = new_position(filename, off, row, col);
     x->data.continue_ctrl = continue_ctrl;
@@ -580,9 +578,9 @@ struct AstNode *_continue_ctrl() {
 struct AstNode *_return_ctrl() {
     _debug("return");
 
-    struct ReturnCtrl *return_ctrl = NEW_AST_NODE(ReturnCtrl);
+    struct ReturnCtrl *return_ctrl = CREATE_STRUCT_P(ReturnCtrl);
     struct Position   *pos = new_position(filename, off, row, col);
-    struct AstNode    *x = NEW_AST_NODE(AstNode);
+    struct AstNode    *x = create_ast_node();
     x->class = RETURN_CTRL;
     x->pos = pos;
     x->data.return_ctrl = return_ctrl;
@@ -608,8 +606,8 @@ struct AstNode *_if_ctrl() {
 
     struct Position *pos = new_position(filename, off, row, col);
     _want(_if);
-    struct IfCtrl  *if_ctrl = NEW_AST_NODE(IfCtrl);
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct IfCtrl  *if_ctrl = CREATE_STRUCT_P(IfCtrl);
+    struct AstNode *x = create_ast_node();
     x->class = IF_CTRL;
     x->pos = pos;
     x->data.if_ctrl = if_ctrl;
@@ -617,36 +615,28 @@ struct AstNode *_if_ctrl() {
     if_ctrl->cond = _expr();
     _want(_rparen);
 
-    // TODO: enter if scope
     if_ctrl->then = _code_block();
-    // TODO: exit if scope
 
     if_ctrl->else_ifs = calloc(8, sizeof(struct AstNode *));
     if_ctrl->else_if_size = 0;
     if_ctrl->else_if_cap = 8;
     while (_got(_elseif)) {
         pos = new_position(filename, off, row, col);
-        struct ElseIfCtrl *else_if_ctrl = NEW_AST_NODE(ElseIfCtrl);
+        struct ElseIfCtrl *else_if_ctrl = CREATE_STRUCT_P(ElseIfCtrl);
         _want(_lparen);
         else_if_ctrl->cond = _expr();
         _want(_rparen);
 
-        // TODO: enter else if scope
         else_if_ctrl->then = _code_block();
-        // TODO: exit else if scope
 
-        struct AstNode *t = NEW_AST_NODE(AstNode);
+        struct AstNode *t = create_ast_node();
         t->class = ELSE_IF_CTRL;
         t->pos = pos;
         t->data.else_if_ctrl = else_if_ctrl;
         if_ctrl->else_ifs[if_ctrl->else_if_size++] = t;
     }
 
-    if (_got(_else)) {
-        // TODO: enter else scope
-        if_ctrl->_else = _code_block();
-        // TODO: exit else scope
-    }
+    if (_got(_else)) if_ctrl->_else = _code_block();
 
     return x;
 }
@@ -680,9 +670,8 @@ struct AstNode *_for_ctrl() {
     struct Position *pos = new_position(filename, off, row, col);
     _want(_for);
 
-    // TODO: enter for scope
-    struct ForCtrl *for_ctrl = NEW_AST_NODE(ForCtrl);
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct ForCtrl *for_ctrl = CREATE_STRUCT_P(ForCtrl);
+    struct AstNode *x = create_ast_node();
     x->class = FOR_CTRL;
     x->pos = pos;
     x->data.for_ctrl = for_ctrl;
@@ -709,8 +698,6 @@ struct AstNode *_for_ctrl() {
 
     for_ctrl->body = _code_block();
 
-    // TODO: exit for scope
-
     return x;
 }
 
@@ -736,8 +723,8 @@ struct AstNode *_ctrl() {
 struct AstNode *_empty_stmt() {
     _debug("empty stmt");
 
-    struct EmptyStmt *empty_stmt = NEW_AST_NODE(EmptyStmt);
-    struct AstNode   *x = NEW_AST_NODE(AstNode);
+    struct EmptyStmt *empty_stmt = CREATE_STRUCT_P(EmptyStmt);
+    struct AstNode   *x = create_ast_node();
     x->class = EMPTY_STMT;
     x->pos = new_position(filename, off, row, col);
     x->data.empty_stmt = empty_stmt;
@@ -753,7 +740,6 @@ struct AstNode *_empty_stmt() {
 struct AstNode *_stmt() {
     _debug("statement");
 
-    // TODO: enter anonymous scope
     struct AstNode *x;
     if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER) || _is(_at) || _is(_func)) x = _decl();
     else if (_contains(expr_start_tokens, EXPR_START_TOKEN_NUMBER)) x = _expr();
@@ -765,7 +751,6 @@ struct AstNode *_stmt() {
         strcpy(syntax_bad_msg, "illegal statement");
         _error_exit();
     }
-    // TODO: exit anonymous scope
 
     return x;
 }
@@ -783,11 +768,11 @@ static bool _parse_code_block_statements(struct AstNode *node, const enum Token 
 struct AstNode *_code_block() {
     _debug("code block");
 
-    struct CodeBlock *code_block = NEW_AST_NODE(CodeBlock);
+    struct CodeBlock *code_block = CREATE_STRUCT_P(CodeBlock);
     code_block->stmts = calloc(8, sizeof(struct AstNode *));
     code_block->size = 0;
     code_block->cap = 8;
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = CODE_BLOCK;
     x->pos = new_position(filename, off, row, col);
     x->data.code_block = code_block;
@@ -807,9 +792,9 @@ struct AstNode *parse() {
     _syntax_next();
 
     struct Position *pos = new_position(filename, off, row, col);
-    struct CodeFile *code_file = NEW_AST_NODE(CodeFile);
+    struct CodeFile *code_file = CREATE_STRUCT_P(CodeFile);
     code_file->code_block = _code_block();
-    struct AstNode *x = NEW_AST_NODE(AstNode);
+    struct AstNode *x = create_ast_node();
     x->class = CODE_FILE;
     x->pos = pos;
     x->data.code_file = code_file;
