@@ -38,8 +38,13 @@ struct AnyType {
         char *name;
 };
 
-extern struct BasicType basic_types[];
-extern struct AnyType   ANY_TYPE;
+struct TypeSymbol {
+        char *symbol;
+};
+
+extern struct BasicType  basic_types[];
+extern struct AnyType    ANY_TYPE;
+extern struct TypeSymbol type_symbols[];
 
 struct Type *create_signature_type(struct FuncDecl *func_decl);
 struct Type *create_array_type(struct ArrayTypeDecl *array_type_decl);

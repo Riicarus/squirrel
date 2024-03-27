@@ -1,7 +1,7 @@
 #include "lex.h"
+#include "global.h"
 #include <string.h>
 
-bool                 debug;                // is in debug mode
 char                *filename;             // current parsing file name
 static char         *buffer;               // buffer of read file
 static unsigned long buffer_len;           // length of buffer

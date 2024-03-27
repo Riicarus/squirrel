@@ -1,6 +1,8 @@
 #ifndef POSITION_H
 #define POSITION_H
 
+#include "global.h"
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,7 +20,7 @@ static struct Position *new_position(char *filename, int off, int row, int col) 
         return NULL;
     }
 
-    struct Position *pos = malloc(sizeof(struct Position));
+    struct Position *pos = CREATE_STRUCT_P(Position);
     if (!pos) {
         fprintf(stderr, "no enough memory\n");
         return NULL;

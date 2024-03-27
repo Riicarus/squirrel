@@ -11,5 +11,6 @@ void syntax_test() {
 
     print_node(x, 0, NULL);
 
+    printf("\n\n\n---------------------------------------------------------\n\n\nScope Manage:\n");
     manage_scope(x, NULL, false);
 }

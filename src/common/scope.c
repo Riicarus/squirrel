@@ -1,8 +1,7 @@
 #include "scope.h"
-#include "c_hashmap.h"
 #include "global.h"
-
-extern bool debug;
+#include "c_hashmap.h"
+#include "type.h"
 
 void free_scope(struct Scope *s) {
     if (!s) return;
@@ -28,9 +27,6 @@ struct Scope *create_scope(struct Scope *parent, char *name) {
         fprintf(stderr, "create_scope(), invalid null argument: name\n");
         exit(EXIT_FAILURE);
     }
-    
-    printf("create scope: %s\n", name);
-
     struct Scope *s = CREATE_STRUCT_P(Scope);
     if (!s) goto error;
     s->name = calloc(strlen(name) + 1, sizeof(char));
@@ -45,6 +41,7 @@ struct Scope *create_scope(struct Scope *parent, char *name) {
         parent->last_child_scope = s;
     }
 
+    if (debug) printf("create scope: %s\n", name);
     return s;
 
 error:
@@ -68,7 +65,10 @@ struct Symbol *create_symbol(struct Type *type, char *name, struct Scope *scope,
     s->name = calloc(strlen(name) + 1, sizeof(char));
     if (!s->name) goto error;
     strcpy(s->name, name);
+
+    if (debug) printf("in scope: %s, create symbol: %s, type: %s\n", scope->name, name, type_symbols[type->type_code].symbol);
     return s;
+
 error:
     fprintf(stderr, "create_symbol(), no enough memory\n");
     free_symbol(s);
