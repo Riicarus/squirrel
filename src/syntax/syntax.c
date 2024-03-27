@@ -69,10 +69,12 @@ static void _list(char *context, struct AstNode *node, enum Token start, enum To
     if (sep != _comma && sep != _semi) {
         strcpy(syntax_bad_msg, "illegal sep argument for list method");
         _error_exit();
+        return;
     }
     if (close != _rparen && close != _rbracket && close != _rbrace && close != _semi) {
         strcpy(syntax_bad_msg, "illegal close argument for list method");
         _error_exit();
+        return;
     }
 
     if (start != -1) _want(start);
@@ -86,6 +88,7 @@ static void _list(char *context, struct AstNode *node, enum Token start, enum To
         if (!_got(sep) && close != tk) {
             sprintf(syntax_bad_msg, "in %s, expect %s or %s, but get %s", context, tk_symbols[sep].symbol, tk_symbols[close].symbol, tk_symbols[tk].symbol);
             _error_exit();
+            return;
         }
     }
 
@@ -99,6 +102,7 @@ static void _ensure_ast_node_array_size(struct AstNode ***arr, unsigned int *siz
         if (new_arr == NULL) {
             strcpy(syntax_bad_msg, "no enough memory");
             _error_exit();
+            return;
         }
 
         memcpy(new_arr, *arr, *size * sizeof(struct AstNode *));
@@ -122,6 +126,7 @@ struct AstNode *_name_expr() {
     if (!_is(_ident)) {
         strcpy(syntax_bad_msg, "expect identifier");
         _error_exit();
+        return NULL;
     }
 
     struct NameExpr *name_expr = CREATE_STRUCT_P(NameExpr);
@@ -129,6 +134,7 @@ struct AstNode *_name_expr() {
     if (!name_expr->value) {
         strcpy(syntax_bad_msg, "no enough memory");
         _error_exit();
+        return NULL;
     }
     strcpy(name_expr->value, lexeme);
 
@@ -155,6 +161,7 @@ struct AstNode *_basic_lit() {
     if (!_contains(basic_lit_tokens, BASIC_LIT_TOKEN_NUMBER)) {
         strcpy(syntax_bad_msg, "expect literal");
         _error_exit();
+        return NULL;
     }
 
     struct BasicLit *lit = CREATE_STRUCT_P(BasicLit);
@@ -166,6 +173,7 @@ struct AstNode *_basic_lit() {
     if (!lit->value) {
         strcpy(syntax_bad_msg, "no enough memory");
         _error_exit();
+        return NULL;
     }
     strcpy(lit->value, lexeme);
 
@@ -302,6 +310,7 @@ struct AstNode *_primary_expr(struct AstNode *x) {
                 if (_is(_rbracket)) {
                     strcpy(syntax_bad_msg, "expect operand");
                     _error_exit();
+                    return NULL;
                 }
                 struct IndexExpr *index_expr = CREATE_STRUCT_P(IndexExpr);
                 index_expr->x = x;
@@ -434,10 +443,11 @@ struct AstNode *_basic_type_decl() {
     _debug("basic type decl");
 
     struct BasicTypeDecl *type_decl = CREATE_STRUCT_P(BasicTypeDecl);
-    if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER)) type_decl->symbol = tk_symbols[tk].symbol;
+    if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER)) type_decl->tk = tk;
     else {
         strcpy(syntax_bad_msg, "illegal basic type");
         _error_exit();
+        return NULL;
     }
     struct AstNode *x = create_ast_node();
     x->class = BASIC_TYPE_DECL;
@@ -750,6 +760,7 @@ struct AstNode *_stmt() {
     else {
         strcpy(syntax_bad_msg, "illegal statement");
         _error_exit();
+        return NULL;
     }
 
     return x;

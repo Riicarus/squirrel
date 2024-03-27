@@ -1,6 +1,7 @@
 #include "type.h"
 #include "global.h"
 
+// mapping to enum Token definition
 struct BasicType basic_types[] = {
     {_int_type,    "int"   },
     {_float_type,  "float" },
@@ -12,12 +13,7 @@ struct BasicType basic_types[] = {
 
 struct AnyType ANY_TYPE = {"any"};
 
-struct TypeSymbol type_symbols[] = {
-    "basic",
-    "array",
-    "signature",
-    "any"
-};
+struct TypeSymbol type_symbols[] = {"basic", "array", "signature", "any"};
 
 struct Type *create_signature_type(struct FuncDecl *func_decl) {
     if (!func_decl) return NULL;
@@ -28,7 +24,6 @@ struct Type *create_signature_type(struct FuncDecl *func_decl) {
         exit(EXIT_FAILURE);
         return NULL;
     }
-
     struct Type *t = CREATE_STRUCT_P(Type);
     if (!t) {
         free(signature_type);
@@ -37,6 +32,21 @@ struct Type *create_signature_type(struct FuncDecl *func_decl) {
         exit(EXIT_FAILURE);
         return NULL;
     }
+    signature_type->param_cap = signature_type->param_size = func_decl->param_size;
+    signature_type->param_types = calloc(signature_type->param_size, sizeof(struct Type *));
+    if (!signature_type->param_types) {
+        free(signature_type);
+        signature_type = NULL;
+        fprintf(stderr, "create_signature_type(), no enough memory\n");
+        exit(EXIT_FAILURE);
+        return NULL;
+    }
+    for (int i = 0; i < func_decl->param_size; i++) signature_type->param_types[i] = create_field_decl_type(func_decl->param_decls[i]->data.field_decl);
+
+    // return type of func is either basic type or array type
+    if (func_decl->ret_type_decl->class == BASIC_TYPE_DECL) signature_type->ret_type = create_basic_type(func_decl->ret_type_decl->data.basic_type_decl);
+    else signature_type->ret_type = create_array_type(func_decl->ret_type_decl->data.array_type_decl);
+
     t->type_code = _signature_type;
     t->data.signature_type = signature_type;
     return t;
@@ -51,7 +61,6 @@ struct Type *create_array_type(struct ArrayTypeDecl *array_type_decl) {
         exit(EXIT_FAILURE);
         return NULL;
     }
-
     struct Type *t = CREATE_STRUCT_P(Type);
     if (!t) {
         free(array_type);
@@ -60,6 +69,7 @@ struct Type *create_array_type(struct ArrayTypeDecl *array_type_decl) {
         exit(EXIT_FAILURE);
         return NULL;
     }
+    array_type->ele_type = create_basic_type(array_type_decl->ele_type_decl->data.basic_type_decl);
     t->type_code = _array_type;
     t->data.array_type = array_type;
     return t;
@@ -74,7 +84,6 @@ struct Type *create_basic_type(struct BasicTypeDecl *basic_type_decl) {
         exit(EXIT_FAILURE);
         return NULL;
     }
-
     struct Type *t = CREATE_STRUCT_P(Type);
     if (!t) {
         free(basic_type);
@@ -83,12 +92,14 @@ struct Type *create_basic_type(struct BasicTypeDecl *basic_type_decl) {
         exit(EXIT_FAILURE);
         return NULL;
     }
+    basic_type->code = basic_types[basic_type_decl->tk].code;
+    basic_type->name = basic_types[basic_type_decl->tk].name;
     t->type_code = _basic_type;
     t->data.basic_type = basic_type;
     return t;
 }
 
-struct Type *create_type(struct FieldDecl *field_decl) {
+struct Type *create_field_decl_type(struct FieldDecl *field_decl) {
     if (!field_decl) return NULL;
     switch (field_decl->type_decl->class) {
         case ARRAY_TYPE_DECL: return create_array_type(field_decl->type_decl->data.array_type_decl);

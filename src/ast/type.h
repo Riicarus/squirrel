@@ -28,10 +28,10 @@ struct ArrayType {
 };
 
 struct SignatureType {
-        struct Type *ret_type;
-        int          param_size;
-        struct Type *param_types;
-        char        *name;
+        struct Type  *ret_type;
+        struct Type **param_types;
+        unsigned int  param_size;
+        unsigned int  param_cap;
 };
 
 struct AnyType {
@@ -49,6 +49,6 @@ extern struct TypeSymbol type_symbols[];
 struct Type *create_signature_type(struct FuncDecl *func_decl);
 struct Type *create_array_type(struct ArrayTypeDecl *array_type_decl);
 struct Type *create_basic_type(struct BasicTypeDecl *basic_type_decl);
-struct Type *create_type(struct FieldDecl *field_decl);
+struct Type *create_field_decl_type(struct FieldDecl *field_decl);
 
 #endif

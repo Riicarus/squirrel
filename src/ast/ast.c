@@ -1,4 +1,5 @@
 #include "global.h"
+#include "type.h"
 #include "ast.h"
 
 struct OpPriority op_priority_map[] = {
@@ -88,7 +89,7 @@ void print_node(struct AstNode *node, int level, char *hint) {
             break;
         }
         case BASIC_TYPE_DECL: {
-            printf("[basic type decl]#%d<%s:%d:%d:%d>: %s\n", node->id, pos->filename, pos->off, pos->row, pos->col, node->data.basic_type_decl->symbol);
+            printf("[basic type decl]#%d<%s:%d:%d:%d>: %s\n", node->id, pos->filename, pos->off, pos->row, pos->col, basic_types[node->data.basic_type_decl->tk].name);
             break;
         }
         case BASIC_LIT: {

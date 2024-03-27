@@ -138,7 +138,7 @@ struct ArrayTypeDecl {
 };
 
 struct BasicTypeDecl {
-        char *symbol;
+        enum Token tk;
 };
 
 // expr

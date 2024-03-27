@@ -13,8 +13,8 @@ enum Token {
     _bool,
     _char,
     _string,
-    _func,
     _void,
+    _func,
     // value
     _true,
     _false,
@@ -147,8 +147,8 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(bool);
     ADD_TK_MAPPING(char);
     ADD_TK_MAPPING(string);
-    ADD_TK_MAPPING(func);
     ADD_TK_MAPPING(void);
+    ADD_TK_MAPPING(func);
     ADD_TK_MAPPING(true);
     ADD_TK_MAPPING(false);
     ADD_TK_MAPPING(null);

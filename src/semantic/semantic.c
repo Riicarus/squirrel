@@ -43,7 +43,7 @@ void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymo
         case FIELD_DECL: {
             struct FieldDecl *field_decl = node->data.field_decl;
             // TODO: get field decl type
-            create_symbol(create_type(field_decl), field_decl->name_expr->data.name_expr->value, parent_scope, node->pos);
+            create_symbol(create_field_decl_type(field_decl), field_decl->name_expr->data.name_expr->value, parent_scope, node->pos);
             break;
         }
         case IF_CTRL: {
