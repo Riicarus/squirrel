@@ -11,9 +11,7 @@ struct BasicType basic_types[] = {
     {_void_type,   "void"  },
 };
 
-struct AnyType ANY_TYPE = {"any"};
-
-struct TypeSymbol type_symbols[] = {"basic", "array", "signature", "any"};
+struct TypeSymbol type_symbols[] = {"basic", "array", "signature"};
 
 struct Type *create_signature_type(struct FuncDecl *func_decl) {
     if (!func_decl) return NULL;

@@ -133,6 +133,7 @@ enum Token lex_next() {
             s++;
             offset++;
         }
+        *s = '\0';
 
         // update lexer's offset to offset of matched right '"'
         off += offset;
@@ -263,6 +264,11 @@ enum Token lex_next() {
                 }
             }
 
+            char *s = calloc(strlen(lexeme) + 1, sizeof(char));
+            if (!s) perror("lex: no enough memory");
+            strcpy(s, lexeme);
+            sprintf(lexeme, "-%s", s);
+            free(s);
             if (!is_float) _contract();
             lk = is_float ? float_lk : int_lk;
             return tk = _lit;

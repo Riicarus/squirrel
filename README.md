@@ -7,7 +7,7 @@ Squirrel is a simple compiled language.
 ```txt
 int float bool char string func void
 
-true false null
+true false
 
 for if else elseif continue break return
 
@@ -104,7 +104,6 @@ BasicLit        :   int_lit
                 |   string_lit
                 |   "true"
                 |   "false"
-                |   "null"
 
 ArrayLit        :   "array" "{" [ { BasicLit "," }... ] "}"
 

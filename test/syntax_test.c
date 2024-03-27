@@ -13,4 +13,8 @@ void syntax_test() {
 
     printf("\n\n\n---------------------------------------------------------\n\n\nScope Manage:\n");
     manage_scope(x, NULL, false);
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nType Check:\n");
+    check_node_type(x, NULL, NULL, false);
+    printf("\nType Check finished\n");
 }

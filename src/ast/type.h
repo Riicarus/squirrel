@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "ast.h"
 
-enum TypeCode { _basic_type, _array_type, _signature_type, _any_type };
+enum TypeCode { _basic_type, _array_type, _signature_type };
 
 enum BasicTypeCode { _int_type = 1 << 5, _float_type = 1 << 4, _bool_type = 1 << 3, _char_type = 1 << 2, _string_type = 1 << 1, _void_type = 1 };
 
@@ -34,16 +34,11 @@ struct SignatureType {
         unsigned int  param_cap;
 };
 
-struct AnyType {
-        char *name;
-};
-
 struct TypeSymbol {
         char *symbol;
 };
 
 extern struct BasicType  basic_types[];
-extern struct AnyType    ANY_TYPE;
 extern struct TypeSymbol type_symbols[];
 
 struct Type *create_signature_type(struct FuncDecl *func_decl);

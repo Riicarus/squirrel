@@ -5,6 +5,6 @@
 #include "scope.h"
 
 void         manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymous);
-struct Type *check_node_type(struct AstNode *node);
+struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, struct Type *outer_type, bool anonymous);
 
 #endif

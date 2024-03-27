@@ -153,7 +153,6 @@ struct AstNode *_name_expr() {
  *              |   string_lit
  *              |   "true"
  *              |   "false"
- *              |   "null"
  */
 struct AstNode *_basic_lit() {
     _debug("basic lit");
@@ -167,7 +166,6 @@ struct AstNode *_basic_lit() {
     struct BasicLit *lit = CREATE_STRUCT_P(BasicLit);
     // handle basic lit kind of keywords
     if (_is(_true) || _is(_false)) lit->lk = bool_lk;
-    else if (_is(_null)) lit->lk = null_lk;
     else lit->lk = lk;
     lit->value = calloc(strlen(lexeme) + 1, sizeof(char));
     if (!lit->value) {

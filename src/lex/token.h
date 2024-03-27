@@ -18,7 +18,6 @@ enum Token {
     // value
     _true,
     _false,
-    _null,
     // control
     _for,
     _if,
@@ -91,7 +90,7 @@ enum Token {
 #define BINARY_OP_TOKEN_NUMBER 19
 #define CTRL_START_TOKEN_NUMBER 5
 #define EXPR_START_TOKEN_NUMBER 7
-#define BASIC_LIT_TOKEN_NUMBER 4
+#define BASIC_LIT_TOKEN_NUMBER 3
 
 extern enum Token basic_type_tokens[BASIC_TYPE_TOKEN_NUMBER];
 extern enum Token unary_op_tokens[UNARY_OP_TOKEN_NUMBER];
@@ -151,7 +150,6 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(func);
     ADD_TK_MAPPING(true);
     ADD_TK_MAPPING(false);
-    ADD_TK_MAPPING(null);
     ADD_TK_MAPPING(for);
     ADD_TK_MAPPING(if);
     ADD_TK_MAPPING(else);
@@ -170,7 +168,7 @@ static enum Token lookup_reserved_tk(char *s) {
     return t == NULL ? _not_exist : *t;
 }
 
-enum LitKind { int_lk, float_lk, bool_lk, char_lk, string_lk, null_lk };
+enum LitKind { int_lk, float_lk, bool_lk, char_lk, string_lk };
 
 struct LitKindSymbol {
     char *symbol;

@@ -10,7 +10,6 @@ struct TokenSymbol tk_symbols[] = {"int",
                                    // value
                                    "true",
                                    "false",
-                                   "null",
                                    // control
                                    "for",
                                    "if",
@@ -83,7 +82,6 @@ struct LitKindSymbol lit_kind_symbols[] = {
     "bool",
     "char",
     "string",
-    "null"
 };
 
 enum Token basic_type_tokens[BASIC_TYPE_TOKEN_NUMBER] = {_int, _float, _bool, _char, _string, _void};
@@ -116,6 +114,6 @@ enum Token ctrl_start_tokens[CTRL_START_TOKEN_NUMBER] = {_break, _continue, _ret
 
 enum Token expr_start_tokens[EXPR_START_TOKEN_NUMBER] = {_lparen, _ident, _inc, _dec, _not, _lnot, _array};
 
-enum Token basic_lit_tokens[BASIC_LIT_TOKEN_NUMBER] = {_lit, _true, _false, _null};
+enum Token basic_lit_tokens[BASIC_LIT_TOKEN_NUMBER] = {_lit, _true, _false};
 
 hashmap reserved_tk_map = NULL;

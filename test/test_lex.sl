@@ -2,12 +2,12 @@
     // hello
     // basic types
     int i = 0;
-    float f = 0.0;
+    float f = -0.0;
+    // char i = 'i';
     bool on = true;
     on = false;
     char c = 'c';
     string s = "str";
-    string n = null;
 
     // array type
     @int int_arr = array{1, 2, 3};
@@ -26,12 +26,13 @@
         for (int i = 0; i <= n; i ++) {
             sum = sum + i;
         };
+        // return sum + "1";
         return sum;
     };
 
     // other symbols
     func test_other_symbols() void {
-        int i = 1;
+        int i = -1;
         i = (2 << 1) * i;
         if (i != 1) { break; }
         else { continue; };

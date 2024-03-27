@@ -41,6 +41,7 @@ struct Scope *create_scope(struct Scope *parent, char *name) {
         parent->last_child_scope = s;
     }
 
+    if (debug && parent) printf("in scope: %s, ", parent->name);
     if (debug) printf("create scope: %s\n", name);
     return s;
 
@@ -59,12 +60,12 @@ struct Symbol *create_symbol(struct Type *type, char *name, struct Scope *scope,
     struct Symbol *s = CREATE_STRUCT_P(Symbol);
     if (!s) goto error;
     s->scope = scope;
-    scope_add_symbol(scope, s);
     s->pos = pos;
     s->type = type;
     s->name = calloc(strlen(name) + 1, sizeof(char));
     if (!s->name) goto error;
     strcpy(s->name, name);
+    scope_add_symbol(scope, s);
 
     if (debug) printf("in scope: %s, create symbol: %s, type: %s\n", scope->name, name, type_symbols[type->type_code].symbol);
     return s;
@@ -106,6 +107,7 @@ void scope_add_symbol(struct Scope *s, struct Symbol *symbol) {
     struct Symbol *sym = scope_lookup_symbol(s, symbol->name);
     if (sym) {
         fprintf(stderr, "symbol %s have already defined\n", symbol->name);
+        exit(EXIT_FAILURE);
         return;
     }
 
