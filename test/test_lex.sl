@@ -9,6 +9,9 @@
     char c = 'c';
     string s = "str";
 
+    // return;
+    // break;
+
     // array type
     @int int_arr = array{1, 2, 3};
 
@@ -18,6 +21,8 @@
         if (a > b) { return 1; }
         elseif (a == b) { return 0; }
         else { return -1; };
+
+        return 100;
     };
 
     // func, for
@@ -31,11 +36,11 @@
     };
 
     // other symbols
-    func test_other_symbols() void {
+    func test_other_symbols() int {
         int i = -1;
         i = (2 << 1) * i;
-        if (i != 1) { break; }
-        else { continue; };
-        return;
+        if (i != 1) { return 0; }
+        else { return -1; };
+        return 1;
     };
 }

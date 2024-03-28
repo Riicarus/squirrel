@@ -17,4 +17,12 @@ void syntax_test() {
     printf("\n\n\n---------------------------------------------------------\n\n\nType Check:\n");
     check_node_type(x, NULL, NULL, false);
     printf("\nType Check finished\n");
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nReachable Check:\n");
+    check_stmt(x, false, false);
+    printf("\nReachable Check finished\n");
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nAnalyzed AST:\n");
+
+    print_node(x, 0, NULL);
 }

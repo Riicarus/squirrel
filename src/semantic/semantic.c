@@ -56,6 +56,7 @@ void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymo
             // else ifs
             for (int i = 0; i < if_ctrl->else_if_size; i++) manage_scope(if_ctrl->else_ifs[i], parent_scope, false);
             // else
+            if (!if_ctrl->_else) break;
             sprintf(name, "else#%d", if_ctrl->_else->id);
             s = create_scope(parent_scope, name);
             manage_scope(if_ctrl->_else, s, false);
@@ -143,11 +144,13 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
 
             // if-else, in else scope
             // enter else scope
-            sprintf(name, "else#%d", if_ctrl->_else->id);
-            cur_scope = enter_scope(cur_scope, name);
-            check_node_type(if_ctrl->_else, cur_scope, outer_type, false);
-            // exit else scope
-            cur_scope = exit_scope(cur_scope);
+            if (if_ctrl->_else) {
+                sprintf(name, "else#%d", if_ctrl->_else->id);
+                cur_scope = enter_scope(cur_scope, name);
+                check_node_type(if_ctrl->_else, cur_scope, outer_type, false);
+                // exit else scope
+                cur_scope = exit_scope(cur_scope);
+            }
 
             // if-else-ifs, in parent scope
             for (int i = 0; i < if_ctrl->else_if_size; i++) check_node_type(if_ctrl->else_ifs[i], cur_scope, outer_type, false);
@@ -291,7 +294,8 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
 
             if (!type_y) return type_x;
 
-            if (type_x->type_code != type_y->type_code || (type_x->type_code == _basic_type && type_x->data.basic_type->code != type_y->data.basic_type->code)) {
+            if (type_x->type_code != type_y->type_code ||
+                (type_x->type_code == _basic_type && type_x->data.basic_type->code != type_y->data.basic_type->code)) {
                 fprintf(stderr,
                         "at %s:%d:%d:%d, illegal type for operation\n",
                         operation->y->pos->filename,
@@ -387,4 +391,137 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
     }
 
     return NULL;
+}
+
+bool check_stmt(struct AstNode *node, bool must_return, bool in_loop) {
+    if (!node) return false;
+
+    node->reachable = true;
+    switch (node->class) {
+        case CODE_FILE: {
+            struct CodeFile *code_file = node->data.code_file;
+            check_stmt(code_file->code_block, false, false);
+            break;
+        }
+        case CODE_BLOCK: {
+            struct CodeBlock *code_block = node->data.code_block;
+            bool              returned = false;
+            bool              reachable = true;
+            struct Position  *pos = node->pos;
+            for (int i = 0; i < code_block->size && reachable; i++) {
+                enum NodeClass class = code_block->stmts[i]->class;
+                if (class == RETURN_CTRL) reachable = false;
+                if (class == CONTINUE_CTRL || class == BREAK_CTRL) {
+                    if (in_loop) reachable = false;
+                    else {
+                        pos = code_block->stmts[i]->pos;
+                        fprintf(stderr, "at %s:%d:%d:%d, illegal statement\n", pos->filename, pos->off, pos->row, pos->col);
+                        exit(EXIT_FAILURE);
+                        return false;
+                    }
+                }
+                returned |= check_stmt(code_block->stmts[i], false, in_loop);
+                if (returned) reachable = false;
+            }
+
+            if (must_return && !returned) {
+                fprintf(stderr, "at %s:%d:%d:%d, missing return statement\n", pos->filename, pos->off, pos->row, pos->col);
+                exit(EXIT_FAILURE);
+                return false;
+            }
+            return returned;
+        }
+        case IF_CTRL: {
+            struct IfCtrl *if_ctrl = node->data.if_ctrl;
+            bool           returned = true;
+            check_stmt(if_ctrl->cond, false, in_loop);
+            returned &= check_stmt(if_ctrl->then, false, in_loop);
+            returned &= check_stmt(if_ctrl->_else, false, in_loop);
+            for (int i = 0; i < if_ctrl->else_if_size; i++) returned &= check_stmt(if_ctrl->else_ifs[i], false, in_loop);
+            return returned;
+        }
+        case ELSE_IF_CTRL: {
+            struct ElseIfCtrl *else_if_ctrl = node->data.else_if_ctrl;
+            check_stmt(else_if_ctrl->cond, false, in_loop);
+            return check_stmt(else_if_ctrl->then, false, in_loop);
+        }
+        case FOR_CTRL: {
+            struct ForCtrl *for_ctrl = node->data.for_ctrl;
+            for (int i = 0; i < for_ctrl->inits_size; i++) check_stmt(for_ctrl->inits[i], false, false);
+            for (int i = 0; i < for_ctrl->updates_size; i++) check_stmt(for_ctrl->updates[i], false, false);
+            check_stmt(for_ctrl->cond, false, false);
+            return check_stmt(for_ctrl->body, false, true);
+        }
+        case FUNC_DECL: {
+            struct FuncDecl *func_decl = node->data.func_decl;
+            must_return = !(func_decl->ret_type_decl->class == BASIC_TYPE_DECL && func_decl->ret_type_decl->data.basic_type_decl->tk == _void_type);
+
+            for (int i = 0; i < func_decl->param_size; i++) check_stmt(func_decl->param_decls[i], false, in_loop);
+            check_stmt(func_decl->ret_type_decl, false, in_loop);
+            check_stmt(func_decl->body, must_return, in_loop);
+            return false;
+        }
+        case RETURN_CTRL: {
+            struct ReturnCtrl *return_ctrl = node->data.return_ctrl;
+            check_stmt(return_ctrl->ret_val, false, in_loop);
+            return true;
+        }
+        case BASIC_LIT: break;
+        case ARRAY_LIT: {
+            struct ArrayLit *array_lit = node->data.array_lit;
+            for (int i = 0; i < array_lit->size; i++) check_stmt(array_lit->elements[i], false, in_loop);
+            break;
+        }
+        case CALL_EXPR: {
+            struct CallExpr *call_expr = node->data.call_expr;
+            check_stmt(call_expr->func_expr, false, in_loop);
+            for (int i = 0; i < call_expr->param_size; i++) check_stmt(call_expr->params[i], false, in_loop);
+            break;
+        }
+        case INC_EXPR: {
+            struct IncExpr *inc_expr = node->data.inc_expr;
+            check_stmt(inc_expr->x, false, inc_expr);
+            break;
+        }
+        case INDEX_EXPR: {
+            struct IndexExpr *index_expr = node->data.index_expr;
+            check_stmt(index_expr->x, false, in_loop);
+            check_stmt(index_expr->index, false, in_loop);
+            break;
+        }
+        case OPERATION: {
+            struct Operation *operation = node->data.operation;
+            check_stmt(operation->x, false, in_loop);
+            check_stmt(operation->y, false, in_loop);
+            break;
+        }
+        case SIZE_EXPR: {
+            struct SizeExpr *size_expr = node->data.size_expr;
+            check_stmt(size_expr->x, false, in_loop);
+            break;
+        }
+        case FIELD_DECL: {
+            struct FieldDecl *field_decl = node->data.field_decl;
+            check_stmt(field_decl->type_decl, false, in_loop);
+            check_stmt(field_decl->name_expr, false, in_loop);
+            check_stmt(field_decl->assign_expr, false, in_loop);
+            break;
+        }
+        case ARRAY_TYPE_DECL: {
+            struct ArrayTypeDecl *array_type_decl = node->data.array_type_decl;
+            check_stmt(array_type_decl->ele_type_decl, false, in_loop);
+            break;
+        }
+        case EMPTY_STMT:
+        case BREAK_CTRL:
+        case CONTINUE_CTRL:
+        case NAME_EXPR:
+        case BASIC_TYPE_DECL: break;
+        default: {
+            fprintf(stderr, "check_node_type(), invalid ast node class\n");
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    return false;
 }
