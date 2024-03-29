@@ -1,60 +1,47 @@
 #ifndef IR_H
 #define IR_H
 
-enum QuadOpCode {
-    QUAD_ADD,
-    QUAD_SUB,
-    QUAD_MUL,
-    QUAD_QUO,
-    QUAD_REM,
-    QUAD_AND,
-    QUAD_OR,
-    QUAD_NOT,
-    QUAD_XOR,
-    QUAD_MOV,
-    QUAD_LOAD,
-    QUAD_STORE,
-    QUAD_JMP,
-    QUAD_JE,
-    QUAD_JNE,
-    QUAD_JLT,
-    QUAD_JLE,
-    QUAD_JGT,
-    QUAD_JGE,
-    QUAD_CALL,
-    QUAD_RET,
-    QUAD_LABEL,
-    QUAD_FUNC,
-    QUAD_SET_ELE,
-    QUAD_GET_ELE
+enum TacOpCode {
+    TAC_EQ,
+    TAC_NE,
+    TAC_LT,
+    TAC_LE,
+    TAC_GT,
+    TAC_GE,
+    TAC_ADD,
+    TAC_SUB,
+    TAC_MUL,
+    TAC_QUO,
+    TAC_REM,
+    TAC_AND,
+    TAC_OR,
+    TAC_XOR,
+    TAC_SHL,
+    TAC_SHR,
+    TAC_NOT,
+    TAC_MOV,
+    TAC_JMP,
+    TAC_JE,
+    TAC_JNE,
+    TAC_LABEL,
+    TAC_FUNC_S,
+    TAC_FUNC_E,
+    TAC_PARAM,
+    TAC_CALL,
+    TAC_RET
 };
 
-struct Quad {
-        enum QuadOpCode op;
-        char           *x;
-        char           *y;
-        char           *res;
+extern char *tac_op_code_symbols[];
 
-        struct Quad *next;
+struct TAC {
+        enum TacOpCode op;
+        char           x[256];
+        char           y[256];
+        char           res[256];
+
+        struct TAC *next;
 };
 
-struct BasicBlock {
-        int id;
-
-        struct Quad **instructions;
-        unsigned int  instructions_size;
-        unsigned int  instructions_cap;
-
-        struct BasicBlock **successors;
-        unsigned int        successors_size;
-        unsigned int        successors_cap;
-};
-
-struct CFG {
-        struct BasicBlock *entry;
-        struct BasicBlock *exit;
-};
-
-struct BasicBlock *create_basic_block();
+struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y, char *res);
 
 #endif

@@ -2,40 +2,35 @@
 #include "global.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
-static int block_id = 0;
+char *tac_op_code_symbols[] = {
+    "EQ", "NE", "LT", "LE", "GT", "GE", "ADD", "SUB", "MUL", "QUO", "REM", "AND", "OR", "XOR", "SHL", "SHR", "NOT", "MOV", "JMP", "JE", "JNE", "LABEL", "TAC_FUNC_S", "TAC_FUNC_E", "PARAM", "CALL", "RET"};
 
-struct BasicBlock *create_basic_block() {
-    struct BasicBlock *block = CREATE_STRUCT_P(BasicBlock);
-    if (!block) {
-        fprintf(stderr, "create_basic_block(), no enough memory");
+struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y, char *res) {
+    struct TAC *t = CREATE_STRUCT_P(TAC);
+    if (!t) {
+        fprintf(stderr, "create_tac(), no enough memory\n");
         exit(EXIT_FAILURE);
         return NULL;
     }
 
-    block->id = block_id++;
-    block->instructions = calloc(8, sizeof(struct Quad *));
-    if (!block->instructions) {
-        fprintf(stderr, "create_basic_block(), no enough memory");
-        free(block);
-        block = NULL;
-        exit(EXIT_FAILURE);
-        return NULL;
+    t->op = op;
+    if (x) {
+        strncpy(t->x, x, 255);
+        t->x[255] = '\0';
     }
-    block->instructions_cap = 8;
-    block->instructions_size = 0;
-
-    block->successors = calloc(8, sizeof(struct BasicBlock *));
-    if (!block->successors) {
-        fprintf(stderr, "create_basic_block(), no enough memory");
-        free(block->instructions);
-        free(block);
-        block = NULL;
-        exit(EXIT_FAILURE);
-        return NULL;
+    if (y) {
+        strncpy(t->y, y, 255);
+        t->y[255] = '\0';
     }
-    block->successors_cap = 8;
-    block->successors_size = 0;
+    if (res) {
+        strncpy(t->res, res, 255);
+        t->res[255] = '\0';
+    }
+    if (prev_tac) prev_tac->next = t;
 
-    return block;
+    printf("%s, %s, %s, %s\n", tac_op_code_symbols[op], x ? x : "_", y ? y : "_", res ? res : "_");
+
+    return t;
 }

@@ -4,12 +4,13 @@
 void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymous) {
     if (!node) return;
 
+    node->scope = parent_scope;
     switch (node->class) {
         case CODE_FILE: {
             char name[128];
             sprintf(name, "code_file#%d", node->id);
             struct Scope *s = create_scope(parent_scope, name);
-            node->data.code_file->scope = s;
+            node->scope = s;
             // in fact, code file should not have any parent scope
             if (!parent_scope) s->parent = parent_scope;
             struct CodeFile *code_file = node->data.code_file;
@@ -32,26 +33,40 @@ void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymo
             char             name[128];
             sprintf(name, "func[%s]#%d", func_decl->name_expr->data.name_expr->value, node->id);
 
+            // name
+            manage_scope(func_decl->name_expr, parent_scope, false);
+            // ret_type
+            manage_scope(func_decl->ret_type_decl, parent_scope, false);
+
             struct Symbol *symbol = create_symbol(create_signature_type(func_decl), func_decl->name_expr->data.name_expr->value, parent_scope, node->pos);
 
             struct Scope *s = create_scope(parent_scope, name);
             s->is_func = true;
+            // func params
             for (int i = 0; i < func_decl->param_size; i++) manage_scope(func_decl->param_decls[i], s, false);
+            // body
             manage_scope(func_decl->body, s, false);
             break;
         }
         case FIELD_DECL: {
             struct FieldDecl *field_decl = node->data.field_decl;
-            // TODO: get field decl type
             create_symbol(create_field_decl_type(field_decl), field_decl->name_expr->data.name_expr->value, parent_scope, node->pos);
+
+            manage_scope(field_decl->type_decl, parent_scope, false);
+            manage_scope(field_decl->name_expr, parent_scope, false);
+            manage_scope(field_decl->assign_expr, parent_scope, false);
             break;
         }
         case IF_CTRL: {
             struct IfCtrl *if_ctrl = node->data.if_ctrl;
-            char           name[128];
+
+            // cond
+            manage_scope(if_ctrl->cond, parent_scope, false);
+
+            // then
+            char name[128];
             sprintf(name, "if#%d", node->id);
             struct Scope *s = create_scope(parent_scope, name);
-            // then
             manage_scope(if_ctrl->then, s, false);
             // else ifs
             for (int i = 0; i < if_ctrl->else_if_size; i++) manage_scope(if_ctrl->else_ifs[i], parent_scope, false);
@@ -60,11 +75,18 @@ void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymo
             sprintf(name, "else#%d", if_ctrl->_else->id);
             s = create_scope(parent_scope, name);
             manage_scope(if_ctrl->_else, s, false);
+            // else's codeblock should in parent scope, not else's scope
+            if_ctrl->_else->scope = parent_scope;
             break;
         }
         case ELSE_IF_CTRL: {
             struct ElseIfCtrl *else_if_ctrl = node->data.else_if_ctrl;
-            char               name[128];
+
+            // cond
+            manage_scope(else_if_ctrl->cond, parent_scope, false);
+
+            // then
+            char name[128];
             sprintf(name, "elseif#%d", node->id);
             struct Scope *s = create_scope(parent_scope, name);
             manage_scope(else_if_ctrl->then, s, false);
@@ -72,24 +94,47 @@ void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymo
         }
         case FOR_CTRL: {
             struct ForCtrl *for_ctrl = node->data.for_ctrl;
-            char            name[128];
+
+            char name[128];
             sprintf(name, "for#%d", node->id);
             struct Scope *s = create_scope(parent_scope, name);
             // inits
             for (int i = 0; i < for_ctrl->inits_size; i++) manage_scope(for_ctrl->inits[i], s, false);
+            // cond
+            manage_scope(for_ctrl->cond, parent_scope, false);
+            // updates
+            for (int i = 0; i < for_ctrl->updates_size; i++) manage_scope(for_ctrl->updates[i], s, false);
             // body
             manage_scope(for_ctrl->body, s, false);
             break;
         }
-        case BASIC_TYPE_DECL:
-        case BASIC_LIT:
-        case CALL_EXPR:
-        case INC_EXPR:
+        case RETURN_CTRL: {
+            struct ReturnCtrl *return_ctrl = node->data.return_ctrl;
+            manage_scope(return_ctrl->ret_val, parent_scope, false);
+            break;
+        }
+        case OPERATION: {
+            struct Operation *operation = node->data.operation;
+            manage_scope(operation->x, parent_scope, false);
+            manage_scope(operation->y, parent_scope, false);
+            break;
+        }
+        case INC_EXPR: {
+            struct IncExpr *inc_expr = node->data.inc_expr;
+            manage_scope(inc_expr->x, parent_scope, false);
+            break;
+        }
+        case CALL_EXPR: {
+            struct CallExpr *call_expr = node->data.call_expr;
+            manage_scope(call_expr->func_expr, parent_scope, false);
+            for (int i = 0; i < call_expr->param_size; i++) manage_scope(call_expr->params[i], parent_scope, false);
+            break;
+        }
         case NAME_EXPR:
-        case OPERATION:
+        case BASIC_LIT:
         case BREAK_CTRL:
         case CONTINUE_CTRL:
-        case RETURN_CTRL:
+        case BASIC_TYPE_DECL:
         case EMPTY_STMT: break;
         default: fprintf(stderr, "manage_scope(), invalid ast node class\n");
     }
@@ -102,7 +147,7 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
     switch (node->class) {
         case CODE_FILE: {
             struct CodeFile *code_file = node->data.code_file;
-            cur_scope = code_file->scope;
+            cur_scope = node->scope;
             check_node_type(code_file->code_block, cur_scope, NULL, false);
             break;
         }
@@ -404,17 +449,26 @@ bool check_stmt(struct AstNode *node, bool must_return, bool in_loop) {
         }
         case FOR_CTRL: {
             struct ForCtrl *for_ctrl = node->data.for_ctrl;
+            // inits
             for (int i = 0; i < for_ctrl->inits_size; i++) check_stmt(for_ctrl->inits[i], false, false);
+            // updates
             for (int i = 0; i < for_ctrl->updates_size; i++) check_stmt(for_ctrl->updates[i], false, false);
+            // cond
             check_stmt(for_ctrl->cond, false, false);
+            // body
             return check_stmt(for_ctrl->body, false, true);
         }
         case FUNC_DECL: {
             struct FuncDecl *func_decl = node->data.func_decl;
             must_return = !(func_decl->ret_type_decl->class == BASIC_TYPE_DECL && func_decl->ret_type_decl->data.basic_type_decl->tk == _void_type);
-
+            
+            // name
+            check_stmt(func_decl->name_expr, false, in_loop);
+            // params
             for (int i = 0; i < func_decl->param_size; i++) check_stmt(func_decl->param_decls[i], false, in_loop);
+            // ret_type
             check_stmt(func_decl->ret_type_decl, false, in_loop);
+            // body
             check_stmt(func_decl->body, must_return, in_loop);
             return false;
         }

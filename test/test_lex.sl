@@ -37,10 +37,16 @@
         int i = -1;
         i = (2 << 1) * i;
         if (i != 1) { return 0; }
+        elseif (i == 3) { return 2; }
         else { return -1; };
         return 1;
     };
 
     int k = comp(1, 2);
-    k = recursive_add(k);
+    k = recursive_add(comp(4, 6));
+
+    for (int i = 0; i < 10; i++) {
+        if (i == 1) { return; };
+        i = i + 2;
+    }
 }

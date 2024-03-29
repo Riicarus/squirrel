@@ -1,6 +1,7 @@
 #include "syntax.h"
 #include "lex.h"
 #include "semantic.h"
+#include "ir_gen.h"
 #include <stdio.h>
 
 void syntax_test() {
@@ -25,4 +26,9 @@ void syntax_test() {
     printf("\n\n\n---------------------------------------------------------\n\n\nAnalyzed AST:\n");
 
     print_node(x, 0, NULL);
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nTAC:\n");
+
+    struct TAC *tac = CREATE_STRUCT_P(TAC);
+    gen_tac_from_ast(x, &tac);
 }

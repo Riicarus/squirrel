@@ -70,6 +70,7 @@ struct AstNode {
         int              id;
         struct Position *pos;
         bool             reachable;
+        struct Scope    *scope;
 
         enum NodeClass class;
         union {
@@ -104,7 +105,6 @@ struct CodeBlock {
 
 struct CodeFile {
         struct AstNode *code_block;
-        struct Scope   *scope;
 };
 
 struct EmptyStmt { };
