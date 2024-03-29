@@ -81,6 +81,8 @@ struct LitKindSymbol lit_kind_symbols[] = {
 
 enum Token basic_type_tokens[BASIC_TYPE_TOKEN_NUMBER] = {_int, _float, _bool, _char, _string, _void};
 
+char *basic_type_default_val[BASIC_TYPE_TOKEN_NUMBER] = {"0", "0.0", "false", "0", "", "0"};
+
 enum Token unary_op_tokens[UNARY_OP_TOKEN_NUMBER] = {_not, _lnot};
 
 enum Token binary_op_tokens[BINARY_OP_TOKEN_NUMBER] = {

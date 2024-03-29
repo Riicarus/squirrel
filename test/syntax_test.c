@@ -30,5 +30,8 @@ void syntax_test() {
     printf("\n\n\n---------------------------------------------------------\n\n\nTAC:\n");
 
     struct TAC *tac = CREATE_STRUCT_P(TAC);
+    struct TAC *root_tac = tac;
     gen_tac_from_ast(x, &tac);
+    tac = root_tac->next;
+    print_tac(tac);
 }

@@ -44,4 +44,6 @@ struct TAC {
 
 struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y, char *res);
 
+void print_tac(struct TAC *tac);
+
 #endif

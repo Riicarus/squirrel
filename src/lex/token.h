@@ -88,6 +88,7 @@ enum Token {
 #define BASIC_LIT_TOKEN_NUMBER 3
 
 extern enum Token basic_type_tokens[BASIC_TYPE_TOKEN_NUMBER];
+extern char      *basic_type_default_val[BASIC_TYPE_TOKEN_NUMBER];
 extern enum Token unary_op_tokens[UNARY_OP_TOKEN_NUMBER];
 extern enum Token binary_op_tokens[BINARY_OP_TOKEN_NUMBER];
 extern enum Token ctrl_start_tokens[CTRL_START_TOKEN_NUMBER];
@@ -164,7 +165,7 @@ static enum Token lookup_reserved_tk(char *s) {
 enum LitKind { int_lk, float_lk, bool_lk, char_lk, string_lk };
 
 struct LitKindSymbol {
-    char *symbol;
+        char *symbol;
 };
 
 extern struct LitKindSymbol lit_kind_symbols[];
