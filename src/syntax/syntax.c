@@ -183,44 +183,15 @@ struct AstNode *_basic_lit() {
     return x;
 }
 
-static bool _parse_array_lit_elements(struct AstNode *node, const enum Token _tk, const enum LitKind _lk, const char *lexeme) {
-    struct ArrayLit *lit = node->data.array_lit;
-    _ensure_ast_node_array_size(&lit->elements, &lit->size, &lit->cap);
-    lit->elements[lit->size++] = _basic_lit();
-    return false;
-}
-
-/*
- * ArrayLit     :   "array" "{" [ { BasicLit "," }... ] "}"
- */
-struct AstNode *_array_lit() {
-    _debug("array lit");
-    _want(_array);
-
-    struct ArrayLit *lit = CREATE_STRUCT_P(ArrayLit);
-    lit->elements = calloc(8, sizeof(struct AstNode *));
-    lit->size = 0;
-    lit->cap = 8;
-    struct AstNode *x = create_ast_node();
-    x->class = ARRAY_LIT;
-    x->pos = new_position(filename, off, row, col);
-    x->data.array_lit = lit;
-    _list("array lit elements", x, _lbrace, _comma, _rbrace, _parse_array_lit_elements);
-    return x;
-}
-
 /*
  * Operand      :   Literal
  *              |   identifier
  *              |   "(" Expr ")"
  *
  * Literal      :   BasicLit
- *              |   ArrayLit
  */
 struct AstNode *_operand() {
     _debug("operand");
-
-    if (_is(_array)) return _array_lit();
 
     if (_contains(basic_lit_tokens, BASIC_LIT_TOKEN_NUMBER)) return _basic_lit();
 
@@ -246,13 +217,9 @@ static bool _parse_func_call_params(struct AstNode *node, const enum Token _tk, 
 
 /*
  *PrimaryExpr   :   Operand
- *              |   PrimaryExpr Index
  *              |   PrimaryExpr Arguments
  *              |   PrimaryExpr { "++" | "--" }
  *              |   { "++" | "--" } PrimaryExpr
- *              |   "sizeof" "(" PrimaryExpr ")"
- *
- * Index        :   "[" Expr "]"
  *
  * Arguments    :   "(" [ { Expr "," }... ] ")"
  */
@@ -279,21 +246,6 @@ struct AstNode *_primary_expr(struct AstNode *x) {
                 x = t;
                 break;
             }
-            case _sizeof: {
-                struct SizeExpr *size_expr = CREATE_STRUCT_P(SizeExpr);
-                struct Position *pos = new_position(filename, off, row, col);
-                _syntax_next();
-                _want(_lparen);
-                size_expr->x = _primary_expr(NULL);
-                _want(_rparen);
-
-                struct AstNode *t = create_ast_node();
-                t->class = SIZE_EXPR;
-                t->pos = pos;
-                t->data.size_expr = size_expr;
-                x = t;
-                break;
-            }
             default: x = _operand();
         }
     }
@@ -302,26 +254,6 @@ struct AstNode *_primary_expr(struct AstNode *x) {
         struct Position *pos = new_position(filename, off, row, col);
 
         switch (tk) {
-            case _lbracket: {
-                _debug("index expr");
-                _syntax_next();
-                if (_is(_rbracket)) {
-                    strcpy(syntax_bad_msg, "expect operand");
-                    _error_exit();
-                    return NULL;
-                }
-                struct IndexExpr *index_expr = CREATE_STRUCT_P(IndexExpr);
-                index_expr->x = x;
-                index_expr->index = _expr();
-                _want(_rbracket);
-
-                struct AstNode *t = create_ast_node();
-                t->class = INDEX_EXPR;
-                t->pos = pos;
-                t->data.index_expr = index_expr;
-                x = t;
-                break;
-            }
             case _lparen: {
                 _debug("func call");
 
@@ -454,32 +386,12 @@ struct AstNode *_basic_type_decl() {
     _syntax_next();
     return x;
 }
-
-/*
- * ArrayTypeDecl    :   "@" BasicTypeDecl
- */
-struct AstNode *_array_type_decl() {
-    _debug("array type decl");
-    _want(_at);
-
-    struct ArrayTypeDecl *array_type_decl = CREATE_STRUCT_P(ArrayTypeDecl);
-    array_type_decl->ele_type_decl = _basic_type_decl();
-    ;
-    struct AstNode *x = create_ast_node();
-    x->class = ARRAY_TYPE_DECL;
-    x->pos = new_position(filename, off, row, col);
-    x->data.array_type_decl = array_type_decl;
-    return x;
-}
-
 /*
  * TypeDecl     :   BasicTypeDecl
- *              |   ArrayTypeDecl
  */
 struct AstNode *_type_decl() {
     _debug("type decl");
-    if (_is(_at)) return _array_type_decl();
-    else return _basic_type_decl();
+    return _basic_type_decl();
 }
 
 /*
@@ -653,7 +565,7 @@ static bool _parse_for_inits(struct AstNode *node, const enum Token _tk, const e
     struct ForCtrl *for_ctrl = node->data.for_ctrl;
     _ensure_ast_node_array_size(&for_ctrl->inits, &for_ctrl->inits_size, &for_ctrl->inits_cap);
 
-    if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER) || _is(_at)) for_ctrl->inits[for_ctrl->inits_size++] = _field_decl();
+    if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER)) for_ctrl->inits[for_ctrl->inits_size++] = _field_decl();
     else for_ctrl->inits[for_ctrl->inits_size++] = _expr();
     return false;
 }
@@ -749,7 +661,7 @@ struct AstNode *_stmt() {
     _debug("statement");
 
     struct AstNode *x;
-    if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER) || _is(_at) || _is(_func)) x = _decl();
+    if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER) || _is(_func)) x = _decl();
     else if (_contains(expr_start_tokens, EXPR_START_TOKEN_NUMBER)) x = _expr();
     else if (_contains(ctrl_start_tokens, CTRL_START_TOKEN_NUMBER)) x = _ctrl();
     else if (_is(_lbrace)) x = _code_block();

@@ -11,8 +11,6 @@ true false
 
 for if else elseif continue break return
 
-sizeof array
-
 identifier lit
 
 == != > >= < <=
@@ -21,7 +19,7 @@ identifier lit
 
 ~ !
 
-= ++ -- @
+= ++ --
 
 ( ) [ ] { } -> , . ; : ? //
 
@@ -54,7 +52,6 @@ FieldDecl       :   TypeDecl identifier [ "=" Expr ]
 FuncDecl        :   "func" identifier "(" [ { FieldDecl "," }... ] ")" TypeDecl CodeBlock
 
 TypeDecl        :   BasicTypeDecl
-                |   ArrayTypeDecl
 
 BasicTypeDecl   :   "int"
                 |   "float"
@@ -62,8 +59,6 @@ BasicTypeDecl   :   "int"
                 |   "char"
                 |   "string"
                 |   "void"
-
-ArrayTypeDecl   :   "@" BasicTypeDecl
 ```
 
 ### Expression
@@ -85,18 +80,15 @@ UnaryExpr       :   PrimaryExpr
 UnaryOp         :   "!" | "~"
 
 PrimaryExpr     :   Operand
-                |   PrimaryExpr Index
                 |   PrimaryExpr Arguments
                 |   PrimaryExpr { "++" | "--" }
                 |   { "++" | "--" } PrimaryExpr
-                |   "sizeof" "(" PrimaryExpr ")"
 
 Operand         :   Literal
                 |   identifier
                 |   "(" Expr ")"
 
 Literal         :   BasicLit
-                |   ArrayLit
 
 BasicLit        :   int_lit
                 |   float_lit
@@ -104,10 +96,6 @@ BasicLit        :   int_lit
                 |   string_lit
                 |   "true"
                 |   "false"
-
-ArrayLit        :   "array" "{" [ { BasicLit "," }... ] "}"
-
-Index           :   "[" Expr "]"
 
 Arguments       :   "(" [ { Expr "," }... ] ")"
 ```

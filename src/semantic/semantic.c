@@ -81,16 +81,12 @@ void manage_scope(struct AstNode *node, struct Scope *parent_scope, bool anonymo
             manage_scope(for_ctrl->body, s, false);
             break;
         }
-        case ARRAY_TYPE_DECL:
         case BASIC_TYPE_DECL:
         case BASIC_LIT:
-        case ARRAY_LIT:
         case CALL_EXPR:
         case INC_EXPR:
-        case INDEX_EXPR:
         case NAME_EXPR:
         case OPERATION:
-        case SIZE_EXPR:
         case BREAK_CTRL:
         case CONTINUE_CTRL:
         case RETURN_CTRL:
@@ -234,24 +230,13 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
 
             // lookup func symbol in scope
             struct Symbol *sym = scope_lookup_symbol_from_all(cur_scope, call_expr->func_expr->data.name_expr->value);
-            return sym->type;
+            return sym->type->data.signature_type->ret_type;
         }
         case INC_EXPR: {
             struct IncExpr *inc_expr = node->data.inc_expr;
 
             // return operand's type
             return check_node_type(inc_expr->x, cur_scope, NULL, false);
-        }
-        case INDEX_EXPR: {
-            struct IndexExpr *index_expr = node->data.index_expr;
-
-            // return operand's element type, operand must be array
-            struct Type *array_type = check_node_type(index_expr->x, cur_scope, NULL, false);
-            if (array_type && array_type->type_code == _array_type) return array_type->data.array_type->ele_type;
-
-            fprintf(stderr, "at %s:%d:%d:%d, illegal type, expect array\n", node->pos->filename, node->pos->off, node->pos->row, node->pos->col);
-            exit(EXIT_FAILURE);
-            break;
         }
         case NAME_EXPR: {
             struct NameExpr *name_expr = node->data.name_expr;
@@ -281,7 +266,7 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
                 break;
             }
 
-            if (type_x->type_code != _basic_type && type_x->type_code != _array_type) {
+            if (type_x->type_code != _basic_type) {
                 fprintf(stderr,
                         "at %s:%d:%d:%d, illegal type for operation\n",
                         operation->x->pos->filename,
@@ -307,20 +292,6 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
             }
 
             return type_x;
-        }
-        case SIZE_EXPR: {
-            struct SizeExpr *size_expr = node->data.size_expr;
-
-            struct Type *type_x = check_node_type(size_expr->x, cur_scope, NULL, false);
-            struct Type *t = CREATE_STRUCT_P(Type);
-            t->type_code = _basic_type;
-            t->data.basic_type = &basic_types[0];
-            if (type_x && type_x->type_code == _array_type) return t;
-
-            fprintf(
-                stderr, "at %s:%d:%d:%d, illegal type for sizeof(), expect: array type\n", node->pos->filename, node->pos->off, node->pos->row, node->pos->col);
-            exit(EXIT_FAILURE);
-            break;
         }
         case RETURN_CTRL: {
             struct ReturnCtrl *return_ctrl = node->data.return_ctrl;
@@ -366,20 +337,6 @@ struct Type *check_node_type(struct AstNode *node, struct Scope *parent_scope, s
             t->data.basic_type = &basic_types[basic_lit->lk];
             return t;
         }
-        case ARRAY_LIT: {
-            struct ArrayLit *array_lit = node->data.array_lit;
-
-            struct Type *t = CREATE_STRUCT_P(Type);
-            t->type_code = _array_type;
-            struct ArrayType *array_type = CREATE_STRUCT_P(ArrayType);
-            struct Type      *ele_t = CREATE_STRUCT_P(Type);
-            ele_t->data.basic_type = &basic_types[array_lit->elements[0]->data.basic_lit->lk];
-            ele_t->type_code = _basic_type;
-            array_type->ele_type = ele_t;
-            t->data.array_type = array_type;
-            return t;
-        }
-        case ARRAY_TYPE_DECL: return create_array_type(node->data.array_type_decl);
         case BASIC_TYPE_DECL: return create_basic_type(node->data.basic_type_decl);
         case EMPTY_STMT:
         case BREAK_CTRL:
@@ -467,11 +424,6 @@ bool check_stmt(struct AstNode *node, bool must_return, bool in_loop) {
             return true;
         }
         case BASIC_LIT: break;
-        case ARRAY_LIT: {
-            struct ArrayLit *array_lit = node->data.array_lit;
-            for (int i = 0; i < array_lit->size; i++) check_stmt(array_lit->elements[i], false, in_loop);
-            break;
-        }
         case CALL_EXPR: {
             struct CallExpr *call_expr = node->data.call_expr;
             check_stmt(call_expr->func_expr, false, in_loop);
@@ -483,21 +435,10 @@ bool check_stmt(struct AstNode *node, bool must_return, bool in_loop) {
             check_stmt(inc_expr->x, false, inc_expr);
             break;
         }
-        case INDEX_EXPR: {
-            struct IndexExpr *index_expr = node->data.index_expr;
-            check_stmt(index_expr->x, false, in_loop);
-            check_stmt(index_expr->index, false, in_loop);
-            break;
-        }
         case OPERATION: {
             struct Operation *operation = node->data.operation;
             check_stmt(operation->x, false, in_loop);
             check_stmt(operation->y, false, in_loop);
-            break;
-        }
-        case SIZE_EXPR: {
-            struct SizeExpr *size_expr = node->data.size_expr;
-            check_stmt(size_expr->x, false, in_loop);
             break;
         }
         case FIELD_DECL: {
@@ -505,11 +446,6 @@ bool check_stmt(struct AstNode *node, bool must_return, bool in_loop) {
             check_stmt(field_decl->type_decl, false, in_loop);
             check_stmt(field_decl->name_expr, false, in_loop);
             check_stmt(field_decl->assign_expr, false, in_loop);
-            break;
-        }
-        case ARRAY_TYPE_DECL: {
-            struct ArrayTypeDecl *array_type_decl = node->data.array_type_decl;
-            check_stmt(array_type_decl->ele_type_decl, false, in_loop);
             break;
         }
         case EMPTY_STMT:

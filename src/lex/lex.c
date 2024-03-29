@@ -170,7 +170,6 @@ enum Token lex_next() {
 
     // symbols
     // non-prefix char symbols
-    if (ch == '@') return tk = _at;
     if (ch == '~') return tk = _not;
     if (ch == '*') return tk = _mul;
     if (ch == '%') return tk = _rem;

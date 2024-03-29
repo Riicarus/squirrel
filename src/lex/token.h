@@ -26,9 +26,6 @@ enum Token {
     _continue,
     _break,
     _return,
-    // functional
-    _sizeof,
-    _array,
 
     // lit
     _ident,
@@ -61,8 +58,6 @@ enum Token {
     _assign,
     _inc,
     _dec,
-    // array
-    _at,
 
     // delimeter
     _lparen,
@@ -89,7 +84,7 @@ enum Token {
 #define UNARY_OP_TOKEN_NUMBER 2
 #define BINARY_OP_TOKEN_NUMBER 19
 #define CTRL_START_TOKEN_NUMBER 5
-#define EXPR_START_TOKEN_NUMBER 7
+#define EXPR_START_TOKEN_NUMBER 6
 #define BASIC_LIT_TOKEN_NUMBER 3
 
 extern enum Token basic_type_tokens[BASIC_TYPE_TOKEN_NUMBER];
@@ -157,8 +152,6 @@ static void reserved_tk_map_init() {
     ADD_TK_MAPPING(continue);
     ADD_TK_MAPPING(break);
     ADD_TK_MAPPING(return);
-    ADD_TK_MAPPING(sizeof);
-    ADD_TK_MAPPING(array);
 };
 
 static enum Token lookup_reserved_tk(char *s) {

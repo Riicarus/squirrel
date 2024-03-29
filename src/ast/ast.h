@@ -9,13 +9,10 @@ enum NodeClass {
     CODE_FILE,
     // expr
     BASIC_LIT,
-    ARRAY_LIT,
     CALL_EXPR,
     INC_EXPR,
-    INDEX_EXPR,
     NAME_EXPR,
     OPERATION,
-    SIZE_EXPR,
     // ctrl
     BREAK_CTRL,
     CONTINUE_CTRL,
@@ -29,7 +26,6 @@ enum NodeClass {
     // decl
     FUNC_DECL,
     FIELD_DECL,
-    ARRAY_TYPE_DECL,
     BASIC_TYPE_DECL,
 };
 
@@ -82,16 +78,12 @@ struct AstNode {
                 struct EmptyStmt     *empty_stmt;
                 struct FieldDecl     *field_decl;
                 struct FuncDecl      *func_decl;
-                struct ArrayTypeDecl *array_type_decl;
                 struct BasicTypeDecl *basic_type_decl;
                 struct BasicLit      *basic_lit;
-                struct ArrayLit      *array_lit;
                 struct CallExpr      *call_expr;
                 struct IncExpr       *inc_expr;
-                struct IndexExpr     *index_expr;
                 struct NameExpr      *name_expr;
                 struct Operation     *operation;
-                struct SizeExpr      *size_expr;
                 struct BreakCtrl     *break_ctrl;
                 struct ContinueCtrl  *continue_ctrl;
                 struct ReturnCtrl    *return_ctrl;
@@ -133,10 +125,6 @@ struct FuncDecl {
         struct AstNode  *body;
 };
 
-struct ArrayTypeDecl {
-        struct AstNode *ele_type_decl;
-};
-
 struct BasicTypeDecl {
         enum Token tk;
 };
@@ -145,12 +133,6 @@ struct BasicTypeDecl {
 struct BasicLit {
         char        *value;
         enum LitKind lk;
-};
-
-struct ArrayLit {
-        struct AstNode **elements;
-        unsigned int     size;
-        unsigned int     cap;
 };
 
 struct CallExpr {
@@ -166,11 +148,6 @@ struct IncExpr {
         bool            is_inc;
 };
 
-struct IndexExpr {
-        struct AstNode *x;
-        struct AstNode *index;
-};
-
 struct NameExpr {
         char *value;
 };
@@ -179,10 +156,6 @@ struct Operation {
         struct AstNode *x;
         struct AstNode *y;
         enum Operator   op;
-};
-
-struct SizeExpr {
-        struct AstNode *x;
 };
 
 // ctrl

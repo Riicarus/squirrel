@@ -18,9 +18,6 @@ struct TokenSymbol tk_symbols[] = {"int",
                                    "continue",
                                    "break",
                                    "return",
-                                   // functional
-                                   "sizeof",
-                                   "array",
 
                                    // lit
                                    "ident",
@@ -53,8 +50,6 @@ struct TokenSymbol tk_symbols[] = {"int",
                                    "=",
                                    "++",
                                    "--",
-                                   // array
-                                   "@",
 
                                    // delimeter
                                    "(",
@@ -112,7 +107,7 @@ enum Token binary_op_tokens[BINARY_OP_TOKEN_NUMBER] = {
 
 enum Token ctrl_start_tokens[CTRL_START_TOKEN_NUMBER] = {_break, _continue, _return, _if, _for};
 
-enum Token expr_start_tokens[EXPR_START_TOKEN_NUMBER] = {_lparen, _ident, _inc, _dec, _not, _lnot, _array};
+enum Token expr_start_tokens[EXPR_START_TOKEN_NUMBER] = {_lparen, _ident, _inc, _dec, _not, _lnot};
 
 enum Token basic_lit_tokens[BASIC_LIT_TOKEN_NUMBER] = {_lit, _true, _false};
 

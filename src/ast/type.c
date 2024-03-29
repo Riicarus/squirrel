@@ -11,7 +11,7 @@ struct BasicType basic_types[] = {
     {_void_type,   "void"  },
 };
 
-struct TypeSymbol type_symbols[] = {"basic", "array", "signature"};
+struct TypeSymbol type_symbols[] = {"basic", "signature"};
 
 struct Type *create_signature_type(struct FuncDecl *func_decl) {
     if (!func_decl) return NULL;
@@ -41,35 +41,11 @@ struct Type *create_signature_type(struct FuncDecl *func_decl) {
     }
     for (int i = 0; i < func_decl->param_size; i++) signature_type->param_types[i] = create_field_decl_type(func_decl->param_decls[i]->data.field_decl);
 
-    // return type of func is either basic type or array type
+    // return type of func is basic type 
     if (func_decl->ret_type_decl->class == BASIC_TYPE_DECL) signature_type->ret_type = create_basic_type(func_decl->ret_type_decl->data.basic_type_decl);
-    else signature_type->ret_type = create_array_type(func_decl->ret_type_decl->data.array_type_decl);
 
     t->type_code = _signature_type;
     t->data.signature_type = signature_type;
-    return t;
-}
-
-struct Type *create_array_type(struct ArrayTypeDecl *array_type_decl) {
-    if (!array_type_decl) return NULL;
-
-    struct ArrayType *array_type = CREATE_STRUCT_P(ArrayType);
-    if (!array_type) {
-        fprintf(stderr, "create_array_type(), no enough memory\n");
-        exit(EXIT_FAILURE);
-        return NULL;
-    }
-    struct Type *t = CREATE_STRUCT_P(Type);
-    if (!t) {
-        free(array_type);
-        array_type = NULL;
-        fprintf(stderr, "create_array_type(), no enough memory\n");
-        exit(EXIT_FAILURE);
-        return NULL;
-    }
-    array_type->ele_type = create_basic_type(array_type_decl->ele_type_decl->data.basic_type_decl);
-    t->type_code = _array_type;
-    t->data.array_type = array_type;
     return t;
 }
 
@@ -100,7 +76,6 @@ struct Type *create_basic_type(struct BasicTypeDecl *basic_type_decl) {
 struct Type *create_field_decl_type(struct FieldDecl *field_decl) {
     if (!field_decl) return NULL;
     switch (field_decl->type_decl->class) {
-        case ARRAY_TYPE_DECL: return create_array_type(field_decl->type_decl->data.array_type_decl);
         case BASIC_TYPE_DECL: return create_basic_type(field_decl->type_decl->data.basic_type_decl);
         default: {
             fprintf(stderr, "invalid type class\n");

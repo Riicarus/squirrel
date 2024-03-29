@@ -12,9 +12,6 @@
     // return;
     // break;
 
-    // array type
-    @int int_arr = array{1, 2, 3};
-
     // functions & controls
     // func, if
     func comp(int a, int b) int {
@@ -43,4 +40,7 @@
         else { return -1; };
         return 1;
     };
+
+    int k = comp(1, 2);
+    k = recursive_add(k);
 }

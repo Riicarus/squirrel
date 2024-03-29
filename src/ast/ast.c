@@ -83,12 +83,6 @@ void print_node(struct AstNode *node, int level, char *hint) {
             print_node(func_decl->body, level + 1, "body");
             break;
         }
-        case ARRAY_TYPE_DECL: {
-            printf("(%s)[array type decl]#%d<%s:%d:%d:%d>\n", access_msg, node->id, pos->filename, pos->off, pos->row, pos->col);
-            struct ArrayTypeDecl *arr_type_decl = node->data.array_type_decl;
-            print_node(arr_type_decl->ele_type_decl, level + 1, "ele_type");
-            break;
-        }
         case BASIC_TYPE_DECL: {
             printf("(%s)[basic type decl]#%d<%s:%d:%d:%d>: %s\n",
                    access_msg,
@@ -113,12 +107,6 @@ void print_node(struct AstNode *node, int level, char *hint) {
                    lit_kind_symbols[basic_lit->lk].symbol);
             break;
         }
-        case ARRAY_LIT: {
-            printf("(%s)[array lit]#%d<%s:%d:%d:%d>\n", access_msg, node->id, pos->filename, pos->off, pos->row, pos->col);
-            struct ArrayLit *array_lit = node->data.array_lit;
-            for (int i = 0; i < array_lit->size; i++) print_node(array_lit->elements[i], level + 1, "element");
-            break;
-        }
         case CALL_EXPR: {
             printf("(%s)[call expr]#%d<%s:%d:%d:%d>\n", access_msg, node->id, pos->filename, pos->off, pos->row, pos->col);
             struct CallExpr *call_expr = node->data.call_expr;
@@ -140,13 +128,6 @@ void print_node(struct AstNode *node, int level, char *hint) {
             print_node(inc_expr->x, level + 1, NULL);
             break;
         }
-        case INDEX_EXPR: {
-            printf("(%s)[index expr]#%d<%s:%d:%d:%d>\n", access_msg, node->id, pos->filename, pos->off, pos->row, pos->col);
-            struct IndexExpr *index_expr = node->data.index_expr;
-            print_node(index_expr->x, level + 1, "x");
-            print_node(index_expr->index, level + 1, "index");
-            break;
-        }
         case NAME_EXPR: {
             struct NameExpr *name_expr = node->data.name_expr;
             printf("(%s)[name expr]#%d<%s:%d:%d:%d>: %s\n", access_msg, node->id, pos->filename, pos->off, pos->row, pos->col, name_expr->value);
@@ -164,12 +145,6 @@ void print_node(struct AstNode *node, int level, char *hint) {
                    tk_symbols[(enum Token)(operation->op + _eq)].symbol);
             print_node(operation->x, level + 1, "x");
             if (operation->y) print_node(operation->y, level + 1, "y");
-            break;
-        }
-        case SIZE_EXPR: {
-            printf("(%s)[size expr]#%d<%s:%d:%d:%d>\n", access_msg, node->id, pos->filename, pos->off, pos->row, pos->col);
-            struct SizeExpr *size_expr = node->data.size_expr;
-            print_node(size_expr->x, level + 1, NULL);
             break;
         }
         case BREAK_CTRL: {
