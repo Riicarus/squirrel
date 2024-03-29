@@ -5,7 +5,7 @@
 #include <string.h>
 
 char *tac_op_code_symbols[] = {"EQ",  "NE",  "LT",  "LE",  "GT",  "GE", "ADD", "SUB",   "MUL",        "QUO",        "REM",   "AND",  "OR", "XOR",
-                               "SHL", "SHR", "NOT", "MOV", "JMP", "JE", "JNE", "LABEL", "TAC_FUNC_S", "TAC_FUNC_E", "PARAM", "CALL", "RET"};
+                               "SHL", "SHR", "NOT", "MOV", "JMP", "JE", "JNE", "LABEL", "FUNC_START", "FUNC_END", "PARAM", "CALL", "RET"};
 
 struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y, char *res) {
     struct TAC *t = CREATE_STRUCT_P(TAC);

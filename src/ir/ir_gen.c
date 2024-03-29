@@ -176,7 +176,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // t1 = x
             // x = x + 1
             char *res_name = _gen_temp_var_name();
-            *tac = create_tac(*tac, TAC_MOV, x_name, NULL, res_name);
+            *tac = create_tac(*tac, TAC_MOV, x_name, res_name, NULL);
             *tac = create_tac(*tac, op, x_name, "1", x_name);
             return res_name;
         }

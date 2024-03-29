@@ -27,6 +27,8 @@
         int sum = 0;
         for (int i = 0; i <= n; i ++) {
             sum = sum + i;
+            sum++;
+            --sum;
         };
         // return sum + "1";
         return sum;
