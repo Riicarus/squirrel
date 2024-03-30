@@ -7,16 +7,58 @@
 
 static int var_id = 0;
 
+char *_pack_str_arg(char *name, char *prefix, bool need_free) {
+    char *packed_name = calloc(256, sizeof(char));
+    if (!packed_name) {
+        fprintf(stderr, "_pack_str_arg(), no enough memory");
+        exit(EXIT_FAILURE);
+        return NULL;
+    }
+    sprintf(packed_name, "%s%s", prefix, name);
+    if (need_free) free(name);
+
+    return packed_name;
+}
+
+char *_pack_int_arg(int val) {
+    char *packed_name = calloc(256, sizeof(char));
+    if (!packed_name) {
+        fprintf(stderr, "_pack_int_arg(), no enough memory");
+        exit(EXIT_FAILURE);
+        return NULL;
+    }
+    sprintf(packed_name, "%s%d", LIT_PREFIX, val);
+
+    return packed_name;
+}
+
+char *_pack_float_arg(float val) {
+    char *packed_name = calloc(256, sizeof(char));
+    if (!packed_name) {
+        fprintf(stderr, "_pack_float_arg(), no enough memory");
+        exit(EXIT_FAILURE);
+        return NULL;
+    }
+    sprintf(packed_name, "%s%f", LIT_PREFIX, val);
+
+    return packed_name;
+}
+
+char *_unpack_name(char *name) {
+    if (!name) return NULL;
+
+    return name + 2;
+}
+
 void *_gen_temp_var_name() {
-    char *name = calloc(256, sizeof(char));
+    char *name = calloc(254, sizeof(char));
     if (!name) {
         fprintf(stderr, "_gen_temp_var(), no enough memory");
         exit(EXIT_FAILURE);
         return NULL;
     }
-
     sprintf(name, "t%d", var_id++);
-    return name;
+    return _pack_str_arg(name, VAR_PREFIX, true);
 }
 
 char *_gen_tac_from_operation(struct AstNode *node, struct TAC **tac) {
@@ -52,17 +94,17 @@ char *_gen_tac_from_operation(struct AstNode *node, struct TAC **tac) {
             sprintf(if_true, "%s#%d", IF_TRUE, node->id);
             sprintf(if_end, "%s#%d", IF_END, node->id);
             // JE x, 0, IF_TRUE
-            *tac = create_tac(*tac, TAC_JE, x_name, "0", if_true);
+            *tac = create_tac(*tac, TAC_JE, x_name, _pack_int_arg(0), if_true);
             // JE y, 0, IF_TRUE
-            *tac = create_tac(*tac, TAC_JE, y_name, "0", if_true);
+            *tac = create_tac(*tac, TAC_JE, y_name, _pack_int_arg(0), if_true);
             // MOV res, 1
-            *tac = create_tac(*tac, TAC_MOV, res_name, "1", NULL);
+            *tac = create_tac(*tac, TAC_MOV, res_name, _pack_int_arg(1), NULL);
             // JMP IF_END
             *tac = create_tac(*tac, TAC_JMP, if_end, NULL, NULL);
             // LABEL IF_TRUE
             *tac = create_tac(*tac, TAC_LABEL, if_true, NULL, NULL);
             // MOV res, 0
-            *tac = create_tac(*tac, TAC_MOV, res_name, "0", NULL);
+            *tac = create_tac(*tac, TAC_MOV, res_name, _pack_int_arg(0), NULL);
             // LABEL IF_END
             *tac = create_tac(*tac, TAC_LABEL, if_end, NULL, NULL);
             return res_name;
@@ -76,17 +118,17 @@ char *_gen_tac_from_operation(struct AstNode *node, struct TAC **tac) {
             sprintf(if_true, "%s#%d", IF_TRUE, node->id);
             sprintf(if_end, "%s#%d", IF_END, node->id);
             // JE x, 1, IF_TRUE
-            *tac = create_tac(*tac, TAC_JE, x_name, "1", if_true);
+            *tac = create_tac(*tac, TAC_JE, x_name, _pack_int_arg(1), if_true);
             // JE y, 1, IF_TRUE
-            *tac = create_tac(*tac, TAC_JE, y_name, "1", if_true);
+            *tac = create_tac(*tac, TAC_JE, y_name, _pack_int_arg(1), if_true);
             // MOV res, 0
-            *tac = create_tac(*tac, TAC_MOV, res_name, "0", NULL);
+            *tac = create_tac(*tac, TAC_MOV, res_name, _pack_int_arg(0), NULL);
             // JMP IF_END
             *tac = create_tac(*tac, TAC_JMP, if_end, NULL, NULL);
             // LABEL IF_TRUE
             *tac = create_tac(*tac, TAC_LABEL, if_true, NULL, NULL);
             // MOV res, 1
-            *tac = create_tac(*tac, TAC_MOV, res_name, "1", NULL);
+            *tac = create_tac(*tac, TAC_MOV, res_name, _pack_int_arg(1), NULL);
             // LABEL IF_END
             *tac = create_tac(*tac, TAC_LABEL, if_end, NULL, NULL);
             return res_name;
@@ -104,15 +146,15 @@ char *_gen_tac_from_operation(struct AstNode *node, struct TAC **tac) {
             sprintf(if_false, "%s#%d", IF_FALSE, node->id);
             sprintf(if_end, "%s#%d", IF_END, node->id);
             // JE a, 1, IF_FALSE
-            *tac = create_tac(*tac, TAC_JE, cond_name, "1", if_false);
+            *tac = create_tac(*tac, TAC_JE, cond_name, _pack_int_arg(1), if_false);
             // MOV res, 1
-            *tac = create_tac(*tac, TAC_MOV, res_name, "1", NULL);
+            *tac = create_tac(*tac, TAC_MOV, res_name, _pack_int_arg(1), NULL);
             // JMP IF_END
             *tac = create_tac(*tac, TAC_JMP, if_end, NULL, NULL);
             // LABEL IF_FALSE
             *tac = create_tac(*tac, TAC_LABEL, if_false, NULL, NULL);
             // MOV res, 0
-            *tac = create_tac(*tac, TAC_MOV, res_name, "0", NULL);
+            *tac = create_tac(*tac, TAC_MOV, res_name, _pack_int_arg(0), NULL);
             // LABEL IF_END
             *tac = create_tac(*tac, TAC_LABEL, if_end, NULL, NULL);
             return res_name;
@@ -149,9 +191,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // prepare params
             for (int i = 0; i < call_expr->param_size; i++) *tac = create_tac(*tac, TAC_PARAM, gen_tac_from_ast(call_expr->params[i], tac), NULL, NULL);
 
-            // res = call x, y
-            char param_size[256];
-            sprintf(param_size, "%d", call_expr->param_size);
+            char *param_size = _pack_int_arg(call_expr->param_size);
 
             // return val
             char          *ret = NULL;
@@ -159,7 +199,8 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             if (sym->type->data.signature_type->ret_type->type_code != _void_type) {
                 ret = _gen_temp_var_name();
             }
-            *tac = create_tac(*tac, TAC_CALL, func_name, param_size, ret);
+            // res = call x, y
+            *tac = create_tac(*tac, TAC_CALL, _pack_str_arg(func_name, VAR_PREFIX, false), param_size, ret);
             return ret;
         }
         case INC_EXPR: {
@@ -169,7 +210,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // ++x
             // x = x + 1
             if (inc_expr->is_pre) {
-                *tac = create_tac(*tac, op, x_name, "1", x_name);
+                *tac = create_tac(*tac, op, x_name, _pack_int_arg(1), x_name);
                 return x_name;
             }
             // x++
@@ -177,24 +218,24 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // x = x + 1
             char *res_name = _gen_temp_var_name();
             *tac = create_tac(*tac, TAC_MOV, x_name, res_name, NULL);
-            *tac = create_tac(*tac, op, x_name, "1", x_name);
+            *tac = create_tac(*tac, op, x_name, _pack_int_arg(1), x_name);
             return res_name;
         }
-        case NAME_EXPR: return node->data.name_expr->value;
+        case NAME_EXPR: return _pack_str_arg(node->data.name_expr->value, VAR_PREFIX, false);
         case OPERATION: return _gen_tac_from_operation(node, tac);
         case FIELD_DECL: {
             struct FieldDecl *field_decl = node->data.field_decl;
-            char             *default_var = basic_type_default_val[field_decl->type_decl->data.basic_type_decl->tk];
-            char             *var_name = field_decl->name_expr->data.name_expr->value;
+            char             *default_var = _pack_str_arg(basic_type_default_val[field_decl->type_decl->data.basic_type_decl->tk], LIT_PREFIX, false);
+            char             *var_name = _pack_str_arg(field_decl->name_expr->data.name_expr->value, VAR_PREFIX, false);
             *tac = create_tac(*tac, TAC_MOV, var_name, default_var, NULL);
             gen_tac_from_ast(field_decl->assign_expr, tac);
             return var_name;
         }
         case FUNC_DECL: {
             struct FuncDecl *func_decl = node->data.func_decl;
-            *tac = create_tac(*tac, TAC_FUNC_S, func_decl->name_expr->data.name_expr->value, NULL, NULL);
+            *tac = create_tac(*tac, TAC_FUNC_S, _pack_str_arg(func_decl->name_expr->data.name_expr->value, VAR_PREFIX, false), NULL, NULL);
             gen_tac_from_ast(func_decl->body, tac);
-            *tac = create_tac(*tac, TAC_FUNC_E, func_decl->name_expr->data.name_expr->value, NULL, NULL);
+            *tac = create_tac(*tac, TAC_FUNC_E, _pack_str_arg(func_decl->name_expr->data.name_expr->value, VAR_PREFIX, false), NULL, NULL);
             break;
         }
         case IF_CTRL: {
@@ -208,7 +249,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // t1 = a < b
             char *cond_res = gen_tac_from_ast(if_ctrl->cond, tac);
             // JE t1, 1 IF_TRUE
-            *tac = create_tac(*tac, TAC_JE, cond_res, "1", if_true);
+            *tac = create_tac(*tac, TAC_JE, cond_res, _pack_int_arg(1), if_true);
             // JMP IF_FALSE
             *tac = create_tac(*tac, TAC_JMP, if_false, NULL, NULL);
             // LABEL IF_TRUE
@@ -241,7 +282,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // t1 = a < b
             char *cond_res = gen_tac_from_ast(else_if_ctrl->cond, tac);
             // JE t1, 1 IF_TRUE
-            *tac = create_tac(*tac, TAC_JE, cond_res, "1", if_true);
+            *tac = create_tac(*tac, TAC_JE, cond_res, _pack_int_arg(1), if_true);
             // JMP IF_FALSE
             *tac = create_tac(*tac, TAC_JMP, if_false, NULL, NULL);
             // LABEL IF_TRUE
@@ -268,7 +309,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // cond t1 = i <= n
             char *cond_res = gen_tac_from_ast(for_ctrl->cond, tac);
             // JE t1, 1 FOR_BODY
-            *tac = create_tac(*tac, TAC_JE, cond_res, "1", for_body);
+            *tac = create_tac(*tac, TAC_JE, cond_res, _pack_int_arg(1), for_body);
             // JMP FOR_END
             *tac = create_tac(*tac, TAC_JMP, for_end, NULL, NULL);
             // LABEL FOR_BODY
@@ -295,10 +336,29 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             *tac = create_tac(*tac, TAC_JMP, for_start, NULL, NULL);
             break;
         }
-        case BASIC_LIT: return node->data.basic_lit->value;
+        case BASIC_LIT: return _pack_str_arg(node->data.basic_lit->value, LIT_PREFIX, false);
         case BASIC_TYPE_DECL:
         case EMPTY_STMT: break;
     }
 
     return NULL;
 }
+
+// constant folding & propagation
+void tac_constant_optimize(struct TAC *tac) {
+    if (!tac) return;
+
+    tac_constant_optimize(tac->next);
+}
+
+// dead code elimination
+void tac_dead_code_optimize(struct TAC *tac) {
+    if (!tac) return;
+
+    tac_dead_code_optimize(tac->next);
+}
+
+// copy propagation
+void tac_copy_propagation_optimize(struct TAC *tac);
+
+void tac_optimize(struct TAC *tac);
