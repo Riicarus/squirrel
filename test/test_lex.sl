@@ -50,5 +50,11 @@
     for (int i = 0; i < 10; i++) {
         if (i == 1) { return; };
         i = i + 2;
-    }
+    };
+
+    func void_func() void {
+        return;
+    };
+
+    void_func();
 }

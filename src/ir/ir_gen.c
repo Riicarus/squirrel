@@ -7,14 +7,14 @@
 
 static int var_id = 0;
 
-char *_pack_str_arg(char *name, char *prefix, bool need_free) {
+char *_pack_str_arg(char *name, char prefix, bool need_free) {
     char *packed_name = calloc(256, sizeof(char));
     if (!packed_name) {
         fprintf(stderr, "_pack_str_arg(), no enough memory");
         exit(EXIT_FAILURE);
         return NULL;
     }
-    sprintf(packed_name, "%s%s", prefix, name);
+    sprintf(packed_name, "%c#%s", prefix, name);
     if (need_free) free(name);
 
     return packed_name;
@@ -27,7 +27,7 @@ char *_pack_int_arg(int val) {
         exit(EXIT_FAILURE);
         return NULL;
     }
-    sprintf(packed_name, "%s%d", LIT_PREFIX, val);
+    sprintf(packed_name, "%c#%d", LIT_PREFIX, val);
 
     return packed_name;
 }
@@ -39,7 +39,7 @@ char *_pack_float_arg(float val) {
         exit(EXIT_FAILURE);
         return NULL;
     }
-    sprintf(packed_name, "%s%f", LIT_PREFIX, val);
+    sprintf(packed_name, "%c#%f", LIT_PREFIX, val);
 
     return packed_name;
 }
@@ -196,9 +196,9 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
             // return val
             char          *ret = NULL;
             struct Symbol *sym = scope_lookup_symbol_from_all(call_expr->func_expr->scope, func_name);
-            if (sym->type->data.signature_type->ret_type->type_code != _void_type) {
-                ret = _gen_temp_var_name();
-            }
+            struct Type   *ret_type = sym->type->data.signature_type->ret_type;
+            if (ret_type->type_code != _basic_type || ret_type->data.basic_type->code != _void_type) ret = _gen_temp_var_name();
+
             // res = call x, y
             *tac = create_tac(*tac, TAC_CALL, _pack_str_arg(func_name, VAR_PREFIX, false), param_size, ret);
             return ret;
@@ -344,11 +344,90 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
     return NULL;
 }
 
-// constant folding & propagation
-void tac_constant_optimize(struct TAC *tac) {
-    if (!tac) return;
+struct VarUsageEntry {
+        char name[256];
+        int  cnt;
+};
 
-    tac_constant_optimize(tac->next);
+struct VarUsageEntry *_create_var_usage_entry(char *name, int cnt) {
+    struct VarUsageEntry *entry = CREATE_STRUCT_P(VarUsageEntry);
+    if (!entry) {
+        fprintf(stderr, "_create_var_usage_entry(), no enough memory");
+        exit(EXIT_FAILURE);
+    }
+
+    strcpy(entry->name, name);
+    entry->cnt = cnt;
+    return entry;
+}
+
+void *get_var_usage_name(void *ele) {
+    return ((struct VarUsageEntry *)ele)->name;
+}
+
+void *get_var_usage_cnt(void *ele) {
+    return &((struct VarUsageEntry *)ele)->cnt;
+}
+
+void update_var_usage_cnt(void *ele1, void *ele2) {
+    ((struct VarUsageEntry *)ele1)->cnt = ((struct VarUsageEntry *)ele2)->cnt;
+}
+
+hashmap create_used_var_map() {
+    hashmap map = hashmap_new_default(get_var_usage_name, get_var_usage_cnt, update_var_usage_cnt, str_hash_func, str_eq_func, int_eq_func);
+    return map;
+}
+
+// constant folding & propagation
+void tac_constant_optimize(struct TAC *tail_tac, hashmap map) {
+    if (!tail_tac) return;
+    if (!map) map = create_used_var_map();
+
+    switch (tail_tac->op) {
+        case TAC_EQ:
+        case TAC_NE:
+        case TAC_LT:
+        case TAC_LE:
+        case TAC_GT:
+        case TAC_GE:
+        case TAC_ADD:
+        case TAC_SUB:
+        case TAC_MUL:
+        case TAC_QUO:
+        case TAC_REM:
+        case TAC_AND:
+        case TAC_OR:
+        case TAC_XOR:
+        case TAC_SHL:
+        case TAC_SHR:
+        case TAC_NOT:
+        case TAC_MOV:
+        case TAC_JMP:
+        case TAC_JE:
+        case TAC_JNE:
+        case TAC_LABEL:
+        case TAC_FUNC_S:
+        case TAC_FUNC_E: break;
+        case TAC_PARAM: {
+            if (*tail_tac->x == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->x), 1));
+            break;
+        }
+        case TAC_CALL: {
+            char                 *func_name = _unpack_name(tail_tac->x);
+            struct VarUsageEntry *entry = _create_var_usage_entry(_unpack_name(func_name), 1);
+            if (hashmap_contains_key(map, entry)) hashmap_put(map, entry);
+            else {
+                *tail_tac->res = '\0';
+                free(entry);
+            }
+
+            break;
+        }
+        case TAC_RET:
+            if (*tail_tac->x == VAR_PREFIX) hashmap_put(map, _unpack_name(tail_tac->x));
+    }
+
+    tac_constant_optimize(tail_tac->prev, map);
 }
 
 // dead code elimination
@@ -360,5 +439,3 @@ void tac_dead_code_optimize(struct TAC *tac) {
 
 // copy propagation
 void tac_copy_propagation_optimize(struct TAC *tac);
-
-void tac_optimize(struct TAC *tac);

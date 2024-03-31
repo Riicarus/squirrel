@@ -28,7 +28,10 @@ struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y
         strncpy(t->res, res, 255);
         t->res[255] = '\0';
     }
-    if (prev_tac) prev_tac->next = t;
+    if (prev_tac) {
+        prev_tac->next = t;
+        t->prev = prev_tac;
+    }
 
     return t;
 }
@@ -72,10 +75,14 @@ void print_tac(struct TAC *tac) {
             break;
         }
         case TAC_JE:
-        case TAC_CALL:
         case TAC_JNE: {
             printf("%s %s, %s, %s\n", tac_op_code_symbols[tac->op], tac->x, tac->y, tac->res);
             break;
+        }
+        case TAC_CALL:{
+            printf("%s %s, %s",tac_op_code_symbols[tac->op], tac->x, tac->y);
+            if (*tac->res) printf(", %s", tac->res);
+            printf("\n");
         }
     }
 

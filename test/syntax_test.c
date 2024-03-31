@@ -32,6 +32,11 @@ void syntax_test() {
     struct TAC *tac = CREATE_STRUCT_P(TAC);
     struct TAC *root_tac = tac;
     gen_tac_from_ast(x, &tac);
-    tac = root_tac->next;
-    print_tac(tac);
+    struct TAC *head_tac = root_tac->next;
+    print_tac(head_tac);
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nOptimized TAC:\n");
+
+    tac_constant_optimize(tac, NULL);
+    print_tac(head_tac);
 }

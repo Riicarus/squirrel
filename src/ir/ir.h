@@ -39,6 +39,7 @@ struct TAC {
         char           y[256];
         char           res[256];
 
+        struct TAC *prev;
         struct TAC *next;
 };
 
