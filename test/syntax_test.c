@@ -30,13 +30,13 @@ void syntax_test() {
     printf("\n\n\n---------------------------------------------------------\n\n\nTAC:\n");
 
     struct TAC *tac = CREATE_STRUCT_P(TAC);
+    tac->op = TAC_HEAD;
     struct TAC *root_tac = tac;
     gen_tac_from_ast(x, &tac);
-    struct TAC *head_tac = root_tac->next;
-    print_tac(head_tac);
+    print_tac(root_tac);
 
     printf("\n\n\n---------------------------------------------------------\n\n\nOptimized TAC:\n");
 
-    tac_constant_optimize(tac, NULL);
-    print_tac(head_tac);
+    root_tac = tac_global_var_removal(tac, NULL);
+    print_tac(root_tac);
 }

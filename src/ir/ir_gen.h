@@ -21,7 +21,7 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac);
 hashmap create_used_var_map();
 
 // constant folding & propagation
-void tac_constant_optimize(struct TAC *tail_tac, hashmap map);
+struct TAC *tac_global_var_removal(struct TAC *tail_tac, hashmap map);
 
 // dead code elimination
 void tac_dead_code_optimize(struct TAC *tac);

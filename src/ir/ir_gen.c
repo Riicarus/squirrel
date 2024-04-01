@@ -134,9 +134,10 @@ char *_gen_tac_from_operation(struct AstNode *node, struct TAC **tac) {
             return res_name;
         }
         case NOT: {
-            char *res_name = gen_tac_from_ast(op->x, tac);
-            *tac = create_tac(*tac, TAC_NOT, res_name, NULL, NULL);
-            return res_name;
+            char *x_name = gen_tac_from_ast(op->x, tac);
+            char *var_name = _gen_temp_var_name();
+            *tac = create_tac(*tac, TAC_NOT, x_name, NULL, var_name);
+            return var_name;
         }
         case LNOT: {
             char *cond_name = gen_tac_from_ast(op->x, tac);
@@ -346,10 +347,10 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
 
 struct VarUsageEntry {
         char name[256];
-        int  cnt;
+        int  state; // TODO: divide into bits to store different states: assign/used/...
 };
 
-struct VarUsageEntry *_create_var_usage_entry(char *name, int cnt) {
+struct VarUsageEntry *_create_var_usage_entry(char *name, int state) {
     struct VarUsageEntry *entry = CREATE_STRUCT_P(VarUsageEntry);
     if (!entry) {
         fprintf(stderr, "_create_var_usage_entry(), no enough memory");
@@ -357,7 +358,7 @@ struct VarUsageEntry *_create_var_usage_entry(char *name, int cnt) {
     }
 
     strcpy(entry->name, name);
-    entry->cnt = cnt;
+    entry->state = state;
     return entry;
 }
 
@@ -366,11 +367,11 @@ void *get_var_usage_name(void *ele) {
 }
 
 void *get_var_usage_cnt(void *ele) {
-    return &((struct VarUsageEntry *)ele)->cnt;
+    return &((struct VarUsageEntry *)ele)->state;
 }
 
 void update_var_usage_cnt(void *ele1, void *ele2) {
-    ((struct VarUsageEntry *)ele1)->cnt = ((struct VarUsageEntry *)ele2)->cnt;
+    ((struct VarUsageEntry *)ele1)->state = ((struct VarUsageEntry *)ele2)->state;
 }
 
 hashmap create_used_var_map() {
@@ -378,12 +379,13 @@ hashmap create_used_var_map() {
     return map;
 }
 
-// constant folding & propagation
-void tac_constant_optimize(struct TAC *tail_tac, hashmap map) {
-    if (!tail_tac) return;
+// remove redundant global variables
+struct TAC *tac_global_var_removal(struct TAC *tail_tac, hashmap map) {
+    if (!tail_tac) return NULL;
     if (!map) map = create_used_var_map();
 
     switch (tail_tac->op) {
+        case TAC_HEAD: return tail_tac;
         case TAC_EQ:
         case TAC_NE:
         case TAC_LT:
@@ -400,14 +402,52 @@ void tac_constant_optimize(struct TAC *tail_tac, hashmap map) {
         case TAC_XOR:
         case TAC_SHL:
         case TAC_SHR:
-        case TAC_NOT:
-        case TAC_MOV:
-        case TAC_JMP:
+        case TAC_NOT: {
+            struct VarUsageEntry *entry = _create_var_usage_entry(_unpack_name(tail_tac->res), 1);
+            if (hashmap_contains_key(map, entry)) hashmap_put(map, entry);
+            else {
+                free(entry);
+                // tac always have a prev node--root_tac
+                if (tail_tac->next) {
+                    tail_tac->prev->next = tail_tac->next;
+                    tail_tac->next->prev = tail_tac->prev;
+                } else tail_tac->prev->next = NULL;
+                struct TAC *unused_tac = tail_tac;
+                tail_tac = tail_tac->prev;
+                free(unused_tac);
+                unused_tac = NULL;
+                return tac_global_var_removal(tail_tac, map);
+            }
+
+            if (*tail_tac->x == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->x), 1));
+            if (*tail_tac->y == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->y), 1));
+            break;
+        }
+        case TAC_MOV: {
+            struct VarUsageEntry *entry = _create_var_usage_entry(_unpack_name(tail_tac->x), 1);
+            if (hashmap_contains_key(map, entry)) hashmap_put(map, entry);
+            else {
+                free(entry);
+                // tac always have a prev node--root_tac
+                if (tail_tac->next) {
+                    tail_tac->prev->next = tail_tac->next;
+                    tail_tac->next->prev = tail_tac->prev;
+                } else tail_tac->prev->next = NULL;
+                struct TAC *unused_tac = tail_tac;
+                tail_tac = tail_tac->prev;
+                free(unused_tac);
+                unused_tac = NULL;
+                return tac_global_var_removal(tail_tac, map);
+            }
+            if (*tail_tac->y == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->y), 1));
+            break;
+        }
         case TAC_JE:
-        case TAC_JNE:
-        case TAC_LABEL:
-        case TAC_FUNC_S:
-        case TAC_FUNC_E: break;
+        case TAC_JNE: {
+            if (*tail_tac->x == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->x), 1));
+            if (*tail_tac->y == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->y), 1));
+            break;
+        }
         case TAC_PARAM: {
             if (*tail_tac->x == VAR_PREFIX) hashmap_put(map, _create_var_usage_entry(_unpack_name(tail_tac->x), 1));
             break;
@@ -425,9 +465,13 @@ void tac_constant_optimize(struct TAC *tail_tac, hashmap map) {
         }
         case TAC_RET:
             if (*tail_tac->x == VAR_PREFIX) hashmap_put(map, _unpack_name(tail_tac->x));
+        case TAC_JMP:
+        case TAC_LABEL:
+        case TAC_FUNC_S:
+        case TAC_FUNC_E: break;
     }
 
-    tac_constant_optimize(tail_tac->prev, map);
+    return tac_global_var_removal(tail_tac->prev, map);
 }
 
 // dead code elimination

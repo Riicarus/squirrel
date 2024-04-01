@@ -15,7 +15,7 @@
     // functions & controls
     // func, if
     func comp(int a, int b) int {
-        if (a > b) { return 1; }
+        if (a > b) { return i; }
         elseif (a == b) { return 0; }
         else { return -1; };
 
@@ -57,4 +57,12 @@
     };
 
     void_func();
+
+    if (1 > 2) {};
+
+    func test_bool(bool x) bool {
+        bool y = !x;
+        bool z = ~x;
+        return y & z;
+    }
 }

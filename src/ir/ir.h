@@ -2,6 +2,7 @@
 #define IR_H
 
 enum TacOpCode {
+    TAC_HEAD = -1,
     TAC_EQ,
     TAC_NE,
     TAC_LT,

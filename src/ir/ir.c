@@ -40,6 +40,7 @@ void print_tac(struct TAC *tac) {
     if (!tac) return;
 
     switch (tac->op) {
+        case TAC_HEAD: break;
         case TAC_EQ:
         case TAC_NE:
         case TAC_LT:
@@ -57,8 +58,9 @@ void print_tac(struct TAC *tac) {
         case TAC_SHL:
         case TAC_SHR:
         case TAC_NOT: {
-            printf("%s %s, ", tac_op_code_symbols[tac->op], tac->x);
-            if (*tac->y) printf("%s, %s\n", tac->y, tac->res);
+            printf("%s %s", tac_op_code_symbols[tac->op], tac->x);
+            if (*tac->y) printf(", %s", tac->y);
+            printf(", %s\n", tac->res);
             break;
         }
         case TAC_MOV: {
@@ -79,8 +81,8 @@ void print_tac(struct TAC *tac) {
             printf("%s %s, %s, %s\n", tac_op_code_symbols[tac->op], tac->x, tac->y, tac->res);
             break;
         }
-        case TAC_CALL:{
-            printf("%s %s, %s",tac_op_code_symbols[tac->op], tac->x, tac->y);
+        case TAC_CALL: {
+            printf("%s %s, %s", tac_op_code_symbols[tac->op], tac->x, tac->y);
             if (*tac->res) printf(", %s", tac->res);
             printf("\n");
         }
