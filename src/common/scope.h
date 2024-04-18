@@ -5,24 +5,24 @@
 #include <stdbool.h>
 
 struct Scope {
-        char          *name;         // name of scope
-        bool           is_func;      // is scope a func scope
-        struct Symbol *first_symbol; // first symbol in symbol list
-        struct Symbol *last_symbol;  // last symbol in symbol list
+    char          *name;         // name of scope
+    bool           is_func;      // is scope a func scope
+    struct Symbol *first_symbol; // first symbol in symbol list
+    struct Symbol *last_symbol;  // last symbol in symbol list
 
-        struct Scope *parent;            // parent scope
-        struct Scope *first_child_scope; // first scope in children scope list
-        struct Scope *last_child_scope;  // last scope in children scope list
-        struct Scope *next;              // next scope in the same scope level
+    struct Scope *parent;            // parent scope
+    struct Scope *first_child_scope; // first scope in children scope list
+    struct Scope *last_child_scope;  // last scope in children scope list
+    struct Scope *next;              // next scope in the same scope level
 };
 
 struct Symbol {
-        struct Type *type; // type of symbol
-        char        *name; // name of symbol
+    struct Type *type; // type of symbol
+    char        *name; // name of symbol
 
-        struct Scope    *scope; // which scope the symbol exists
-        struct Position *pos;   // position of the symbol
-        struct Symbol   *next;  // next symbol in the same scope level
+    struct Scope    *scope; // which scope the symbol exists
+    struct Position *pos;   // position of the symbol
+    struct Symbol   *next;  // next symbol in the same scope level
 };
 
 void           free_scope(struct Scope *s);

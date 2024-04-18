@@ -8,10 +8,10 @@
 #include <stdlib.h>
 
 struct Position {
-        char *filename;
-        int   off;
-        int   row;
-        int   col;
+    char *filename;
+    int   off;
+    int   row;
+    int   col;
 };
 
 static struct Position *new_position(char *filename, int off, int row, int col) {

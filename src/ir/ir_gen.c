@@ -346,8 +346,8 @@ char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac) {
 }
 
 struct VarUsageEntry {
-        char name[256];
-        int  state; // TODO: divide into bits to store different states: assign/used/...
+    char name[256];
+    int  state; // TODO: divide into bits to store different states: assign/used/...
 };
 
 struct VarUsageEntry *_create_var_usage_entry(char *name, int state) {

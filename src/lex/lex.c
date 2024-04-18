@@ -40,11 +40,11 @@ bool lex_init(char *filepath, bool _debug) {
 
     size_t buffer_size = 0;
     // no more than 1023 chars/line
-    char   line[MAX_LINE_LEN] = {0};
+    char line[MAX_LINE_LEN] = {0};
     while (fgets(line, sizeof(line), f) != NULL) {
         size_t line_len = strlen(line);
         // +1 for null terminator
-        char  *new_buffer = realloc(buffer, buffer_size + line_len + 1);
+        char *new_buffer = realloc(buffer, buffer_size + line_len + 1);
         if (new_buffer == NULL) {
             free(buffer);
             perror("Lexer: fail to realloc memory");

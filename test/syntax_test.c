@@ -2,6 +2,8 @@
 #include "lex.h"
 #include "semantic.h"
 #include "ir_gen.h"
+#include "ir_optimize.h"
+
 #include <stdio.h>
 
 void syntax_test() {
@@ -33,10 +35,14 @@ void syntax_test() {
     tac->op = TAC_HEAD;
     struct TAC *root_tac = tac;
     gen_tac_from_ast(x, &tac);
-    print_tac(root_tac);
+    print_tac_list(root_tac, NULL);
 
     printf("\n\n\n---------------------------------------------------------\n\n\nOptimized TAC:\n");
 
     root_tac = tac_global_var_removal(tac, NULL);
-    print_tac(root_tac);
+    print_tac_list(root_tac, NULL);
+
+    printf("\n\n\n---------------------------------------------------------\n\n\nCFG:\n");
+    struct CFG *cfg = create_cfg(root_tac);
+    print_cfg(cfg);
 }

@@ -41,7 +41,7 @@ struct Type *create_signature_type(struct FuncDecl *func_decl) {
     }
     for (int i = 0; i < func_decl->param_size; i++) signature_type->param_types[i] = create_field_decl_type(func_decl->param_decls[i]->data.field_decl);
 
-    // return type of func is basic type 
+    // return type of func is basic type
     if (func_decl->ret_type_decl->class == BASIC_TYPE_DECL) signature_type->ret_type = create_basic_type(func_decl->ret_type_decl->data.basic_type_decl);
 
     t->type_code = _signature_type;

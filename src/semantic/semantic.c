@@ -461,7 +461,7 @@ bool check_stmt(struct AstNode *node, bool must_return, bool in_loop) {
         case FUNC_DECL: {
             struct FuncDecl *func_decl = node->data.func_decl;
             must_return = !(func_decl->ret_type_decl->class == BASIC_TYPE_DECL && func_decl->ret_type_decl->data.basic_type_decl->tk == _void);
-            
+
             // name
             check_stmt(func_decl->name_expr, false, in_loop);
             // params

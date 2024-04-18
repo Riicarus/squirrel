@@ -96,14 +96,14 @@ extern enum Token expr_start_tokens[EXPR_START_TOKEN_NUMBER];
 extern enum Token basic_lit_tokens[BASIC_LIT_TOKEN_NUMBER];
 
 struct TokenSymbol {
-        char *symbol;
+    char *symbol;
 };
 
 extern struct TokenSymbol tk_symbols[];
 
 struct TokenMapping {
-        char      *name;
-        enum Token token;
+    char      *name;
+    enum Token token;
 };
 
 static struct TokenMapping *tk_mapping_new(char *name, enum Token token) {
@@ -165,7 +165,7 @@ static enum Token lookup_reserved_tk(char *s) {
 enum LitKind { int_lk, float_lk, bool_lk, char_lk, string_lk };
 
 struct LitKindSymbol {
-        char *symbol;
+    char *symbol;
 };
 
 extern struct LitKindSymbol lit_kind_symbols[];

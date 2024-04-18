@@ -35,17 +35,19 @@ enum TacOpCode {
 extern char *tac_op_code_symbols[];
 
 struct TAC {
-        enum TacOpCode op;
-        char           x[256];
-        char           y[256];
-        char           res[256];
+    enum TacOpCode op;
+    char           x[256];
+    char           y[256];
+    char           res[256];
 
-        struct TAC *prev;
-        struct TAC *next;
+    struct TAC *prev;
+    struct TAC *next;
+
+    struct BasicBlock *block;
 };
 
 struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y, char *res);
 
-void print_tac(struct TAC *tac);
+void print_tac_list(struct TAC *tac_start, struct TAC *tac_end);
 
 #endif

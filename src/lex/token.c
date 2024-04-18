@@ -86,26 +86,7 @@ char *basic_type_default_val[BASIC_TYPE_TOKEN_NUMBER] = {"0", "0.0", "false", "0
 enum Token unary_op_tokens[UNARY_OP_TOKEN_NUMBER] = {_not, _lnot};
 
 enum Token binary_op_tokens[BINARY_OP_TOKEN_NUMBER] = {
-    _eq,
-    _ne,
-    _lt,
-    _le,
-    _gt,
-    _ge,
-    _add,
-    _sub,
-    _mul,
-    _quo,
-    _rem,
-    _and,
-    _or,
-    _xor,
-    _shl,
-    _shr,
-    _land,
-    _lor,
-    _assign
-};
+    _eq, _ne, _lt, _le, _gt, _ge, _add, _sub, _mul, _quo, _rem, _and, _or, _xor, _shl, _shr, _land, _lor, _assign};
 
 enum Token ctrl_start_tokens[CTRL_START_TOKEN_NUMBER] = {_break, _continue, _return, _if, _for};
 

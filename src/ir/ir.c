@@ -36,10 +36,10 @@ struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y
     return t;
 }
 
-void print_tac(struct TAC *tac) {
-    if (!tac) return;
+void print_tac_list(struct TAC *tac_start, struct TAC *tac_end) {
+    if (!tac_start) return;
 
-    switch (tac->op) {
+    switch (tac_start->op) {
         case TAC_HEAD: break;
         case TAC_EQ:
         case TAC_NE:
@@ -58,13 +58,13 @@ void print_tac(struct TAC *tac) {
         case TAC_SHL:
         case TAC_SHR:
         case TAC_NOT: {
-            printf("%s %s", tac_op_code_symbols[tac->op], tac->x);
-            if (*tac->y) printf(", %s", tac->y);
-            printf(", %s\n", tac->res);
+            printf("%s %s", tac_op_code_symbols[tac_start->op], tac_start->x);
+            if (*tac_start->y) printf(", %s", tac_start->y);
+            printf(", %s\n", tac_start->res);
             break;
         }
         case TAC_MOV: {
-            printf("MOV %s, %s\n", tac->x, tac->y);
+            printf("MOV %s, %s\n", tac_start->x, tac_start->y);
             break;
         }
         case TAC_PARAM:
@@ -73,20 +73,22 @@ void print_tac(struct TAC *tac) {
         case TAC_FUNC_S:
         case TAC_FUNC_E:
         case TAC_JMP: {
-            printf("%s %s\n", tac_op_code_symbols[tac->op], tac->x);
+            printf("%s %s\n", tac_op_code_symbols[tac_start->op], tac_start->x);
             break;
         }
         case TAC_JE:
         case TAC_JNE: {
-            printf("%s %s, %s, %s\n", tac_op_code_symbols[tac->op], tac->x, tac->y, tac->res);
+            printf("%s %s, %s, %s\n", tac_op_code_symbols[tac_start->op], tac_start->x, tac_start->y, tac_start->res);
             break;
         }
         case TAC_CALL: {
-            printf("%s %s, %s", tac_op_code_symbols[tac->op], tac->x, tac->y);
-            if (*tac->res) printf(", %s", tac->res);
+            printf("%s %s, %s", tac_op_code_symbols[tac_start->op], tac_start->x, tac_start->y);
+            if (*tac_start->res) printf(", %s", tac_start->res);
             printf("\n");
         }
     }
 
-    print_tac(tac->next);
+    if (tac_start == tac_end) return;
+
+    print_tac_list(tac_start->next, tac_end);
 }
