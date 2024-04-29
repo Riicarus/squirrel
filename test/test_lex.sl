@@ -1,18 +1,11 @@
 {
-    // hello
-    // basic types
     int i = 0;
     float f = -0.0;
-    // char i = 'i';
     bool on = true;
     on = false;
     char c = 'c';
     string s = "str";
 
-    // return;
-    // break;
-
-    // functions & controls
     // func, if
     func comp(int a, int b) int {
         if (a > b) { return i; }
@@ -30,7 +23,6 @@
             sum++;
             --sum;
         };
-        // return sum + "1";
         return sum;
     };
 
@@ -44,25 +36,18 @@
         return 1;
     };
 
-    int k = comp(1, 2);
-    k = recursive_add(comp(4, 6));
-
-    for (int i = 0; i < 10; i++) {
-        if (i == 1) { return; };
-        i = i + 2;
+    func test_bool(bool x) bool {
+        bool y = !x;
+        bool z = ~x;
+        return y & z;
     };
 
     func void_func() void {
         return;
     };
 
+    int k = comp(1, 2);
+    k = recursive_add(comp(4, 6));
+
     void_func();
-
-    if (1 > 2) {};
-
-    func test_bool(bool x) bool {
-        bool y = !x;
-        bool z = ~x;
-        return y & z;
-    }
 }

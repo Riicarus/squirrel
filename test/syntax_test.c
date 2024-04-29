@@ -7,7 +7,8 @@
 #include <stdio.h>
 
 void syntax_test() {
-    if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/test_lex.sl", true)) printf("lexer init failed");
+    if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/test_lex.sl", true)) printf("lexer init failed\n");
+    printf("\n");
     struct AstNode *x = parse();
 
     printf("\n\n\n---------------------------------------------------------\n\n\nAST:\n");

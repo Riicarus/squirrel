@@ -2,15 +2,12 @@
 #include "syntax.h"
 #include "position.h"
 #include "lex.h"
-#include "scope.h"
 #include <string.h>
 
 // use to store previous token info when doing token preview
 static enum Token   prev_tk;                   // previous token
 static enum LitKind prev_lk;                   // previous lit kind
 static char         prev_lexeme[MAX_LINE_LEN]; // previous lexeme
-
-static struct Scope s; // current scope
 
 #define MAX_BAD_MSG_LEN 1024
 char syntax_bad_msg[MAX_BAD_MSG_LEN] = {};
@@ -224,30 +221,28 @@ static bool _parse_func_call_params(struct AstNode *node, const enum Token _tk, 
  * Arguments    :   "(" [ { Expr "," }... ] ")"
  */
 // x is operand
-struct AstNode *_primary_expr(struct AstNode *x) {
+struct AstNode *_primary_expr() {
     _debug("primary expr");
 
-    // no operand, first come to primary expr
-    if (x == NULL) {
-        switch (tk) {
-            case _inc:
-            case _dec: {
-                struct IncExpr *inc_expr = CREATE_STRUCT_P(IncExpr);
-                inc_expr->is_inc = _is(_inc);
-                inc_expr->is_pre = true;
-                struct Position *pos = new_position(filename, off, row, col);
-                _syntax_next();
-                inc_expr->x = _primary_expr(NULL);
+    struct AstNode *x = NULL;
+    switch (tk) {
+        case _inc:
+        case _dec: {
+            struct IncExpr *inc_expr = CREATE_STRUCT_P(IncExpr);
+            inc_expr->is_inc = _is(_inc);
+            inc_expr->is_pre = true;
+            struct Position *pos = new_position(filename, off, row, col);
+            _syntax_next();
+            inc_expr->x = _primary_expr();
 
-                struct AstNode *t = create_ast_node();
-                t->class = INC_EXPR;
-                t->pos = pos;
-                t->data.inc_expr = inc_expr;
-                x = t;
-                break;
-            }
-            default: x = _operand();
+            struct AstNode *t = create_ast_node();
+            t->class = INC_EXPR;
+            t->pos = pos;
+            t->data.inc_expr = inc_expr;
+            x = t;
+            break;
         }
+        default: x = _operand();
     }
 
     for (;;) {
@@ -313,7 +308,7 @@ struct AstNode *_unary_expr() {
         return x;
     }
 
-    return _primary_expr(NULL);
+    return _primary_expr();
 }
 
 /*
