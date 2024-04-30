@@ -5,11 +5,13 @@
     on = false;
     char c = 'c';
     string s = "str";
+    i = 3 + 5;
 
     // func, if
     func comp(int a, int b) int {
+        int k = i + 9;
         if (a > b) { return i; }
-        elseif (a == b) { return 0; }
+        elseif (a == k) { return 0; }
         else { return -1; };
 
         return 100;
