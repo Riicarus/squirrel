@@ -25,8 +25,6 @@ enum TacOpCode {
     TAC_JE,
     TAC_JNE,
     TAC_LABEL,
-    TAC_FUNC_S,
-    TAC_FUNC_E,
     TAC_PARAM,
     TAC_CALL,
     TAC_RET

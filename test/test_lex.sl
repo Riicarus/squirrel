@@ -1,4 +1,9 @@
 {
+    // int k = ;
+    // func test() true {};
+    // func test(int k; int p) int {};
+    // int k = 10,
+
     int i = 0;
     float f = -0.0;
     bool on = true;

@@ -11,7 +11,7 @@ void token_test() {
 }
 
 void lexer_test() {
-    if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/test_lex.sl", true)) printf("lexer init failed");
+    if (!lex_init("/home/riicarus/proj/c_proj/squirrel/test/lex_test.sl", true)) printf("lexer init failed");
     enum Token tk;
     char       pos_msg[32];
     while ((tk = lex_next()) != _eof && tk != _illegal) {

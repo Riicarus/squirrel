@@ -5,7 +5,7 @@
 #include <string.h>
 
 char *tac_op_code_symbols[] = {"EQ",  "NE",  "LT",  "LE",  "GT",  "GE", "ADD", "SUB",   "MUL",        "QUO",      "REM",   "AND",  "OR", "XOR",
-                               "SHL", "SHR", "NOT", "MOV", "JMP", "JE", "JNE", "LABEL", "FUNC_START", "FUNC_END", "PARAM", "CALL", "RET"};
+                               "SHL", "SHR", "NOT", "MOV", "JMP", "JE", "JNE", "LABEL", "PARAM", "CALL", "RET"};
 
 struct TAC *create_tac(struct TAC *prev_tac, enum TacOpCode op, char *x, char *y, char *res) {
     struct TAC *t = CREATE_STRUCT_P(TAC);
@@ -67,11 +67,12 @@ void print_tac_list(struct TAC *tac_start, struct TAC *tac_end) {
             printf("MOV %s, %s\n", tac_start->x, tac_start->y);
             break;
         }
+        case TAC_RET: {
+            printf("%s %s %s\n", tac_op_code_symbols[tac_start->op], tac_start->x, tac_start->res);
+            break;
+        }
         case TAC_PARAM:
-        case TAC_RET:
         case TAC_LABEL:
-        case TAC_FUNC_S:
-        case TAC_FUNC_E:
         case TAC_JMP: {
             printf("%s %s\n", tac_op_code_symbols[tac_start->op], tac_start->x);
             break;

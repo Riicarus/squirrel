@@ -13,6 +13,9 @@ struct BasicBlock {
     bool        is_func;
     struct TAC *head;
     struct TAC *tail;
+
+    bool visited;
+    int  level;
 };
 
 struct CFG {
@@ -23,5 +26,9 @@ struct CFG {
 struct BasicBlock *create_basic_block(struct TAC *tac);
 struct CFG        *create_cfg(struct TAC *tac);
 void               print_cfg(struct CFG *cfg);
+
+void pre_optimization(struct BasicBlock *block);
+void post_optimization(struct BasicBlock *block);
+void optimize_tac(struct BasicBlock *block);
 
 #endif

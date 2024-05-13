@@ -57,7 +57,7 @@ static bool _got(enum Token _tk) {
 
 static void _want(enum Token _tk) {
     if (!_got(_tk)) {
-        sprintf(syntax_bad_msg, "expect %s, but get %s", tk_symbols[_tk].symbol, tk_symbols[tk].symbol);
+        sprintf(syntax_bad_msg, "at %s:%d:%d:%d: expect %s, but get %s", filename, off, row, col, tk_symbols[_tk].symbol, tk_symbols[tk].symbol);
         _error_exit();
     }
 }
@@ -83,7 +83,16 @@ static void _list(char *context, struct AstNode *node, enum Token start, enum To
 
         // should meet sep or close, sep is optional before close
         if (!_got(sep) && close != tk) {
-            sprintf(syntax_bad_msg, "in %s, expect %s or %s, but get %s", context, tk_symbols[sep].symbol, tk_symbols[close].symbol, tk_symbols[tk].symbol);
+            sprintf(syntax_bad_msg,
+                    "at %s:%d:%d:%d: in %s, expect %s or %s, but get %s",
+                    filename,
+                    off,
+                    row,
+                    col,
+                    context,
+                    tk_symbols[sep].symbol,
+                    tk_symbols[close].symbol,
+                    tk_symbols[tk].symbol);
             _error_exit();
             return;
         }
@@ -121,7 +130,7 @@ struct AstNode *_name_expr() {
     _debug("name expr");
 
     if (!_is(_ident)) {
-        strcpy(syntax_bad_msg, "expect identifier");
+        sprintf(syntax_bad_msg, "at %s:%d:%d:%d: %s", filename, off, row, col, "expect identifier\n");
         _error_exit();
         return NULL;
     }
@@ -155,7 +164,7 @@ struct AstNode *_basic_lit() {
     _debug("basic lit");
 
     if (!_contains(basic_lit_tokens, BASIC_LIT_TOKEN_NUMBER)) {
-        strcpy(syntax_bad_msg, "expect literal");
+        sprintf(syntax_bad_msg, "at %s:%d:%d:%d: %s", filename, off, row, col, "expect literal\n");
         _error_exit();
         return NULL;
     }
@@ -200,7 +209,8 @@ struct AstNode *_operand() {
         return node;
     }
 
-    strcpy(syntax_bad_msg, "illegal expression");
+    // strcpy(syntax_bad_msg, "illegal expression");
+    sprintf(syntax_bad_msg, "at %s:%d:%d:%d: %s", filename, off, row, col, "illegal expression\n");
     _error_exit();
     return NULL;
 }
@@ -370,7 +380,7 @@ struct AstNode *_basic_type_decl() {
     struct BasicTypeDecl *type_decl = CREATE_STRUCT_P(BasicTypeDecl);
     if (_contains(basic_type_tokens, BASIC_TYPE_TOKEN_NUMBER)) type_decl->tk = tk;
     else {
-        strcpy(syntax_bad_msg, "illegal basic type");
+        sprintf(syntax_bad_msg, "at %s:%d:%d:%d: %s", filename, off, row, col, "illegal basic type\n");
         _error_exit();
         return NULL;
     }
@@ -626,7 +636,7 @@ struct AstNode *_ctrl() {
         case _if: return _if_ctrl();
         case _for: return _for_ctrl();
         default: {
-            strcpy(syntax_bad_msg, "illegal statement");
+            sprintf(syntax_bad_msg, "at %s:%d:%d:%d: %s", filename, off, row, col, "illegal statement\n");
             _error_exit();
             return NULL;
         }
@@ -663,7 +673,7 @@ struct AstNode *_stmt() {
     else if (_is(_semi)) x = _empty_stmt();
     else if (_is(_eof) || _is(_rbrace)) x = NULL;
     else {
-        strcpy(syntax_bad_msg, "illegal statement");
+        sprintf(syntax_bad_msg, "at %s:%d:%d:%d: %s", filename, off, row, col, "illegal statement\n");
         _error_exit();
         return NULL;
     }

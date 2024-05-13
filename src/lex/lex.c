@@ -120,12 +120,14 @@ enum Token lex_next() {
             if (s - lexeme == MAX_LINE_LEN - 1) {
                 off = offset - 1;
                 lex_bad_msg = "reach max length of line";
+                *s = '\0';
                 return tk = _illegal;
             }
             // string can only be declared in one line
             if (buffer[off + offset] == '\n') {
                 off = offset - 1;
                 lex_bad_msg = "illegal line end in string literal";
+                *s = '\0';
                 return tk = _illegal;
             }
 
