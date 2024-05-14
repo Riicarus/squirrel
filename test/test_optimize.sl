@@ -21,6 +21,10 @@
         return 100;
     };
 
+    func unused() void {
+        int k = 0;
+    };
+
     i = comp(i, 2);
     int k = comp(i, 3);
 }

@@ -124,16 +124,15 @@ void _connect_basic_block(struct BasicBlock *block, int level) {
 NEXT_BLOCK:
     if (!block->next) return;
 
-    struct BasicBlock *successor = NULL;
-    if (block->next->head->op != TAC_LABEL || block->next->head->x[0] != 'S') successor = block->next;
-    else {
+    struct BasicBlock *successor = block->next;
+    while (successor && successor->head->op == TAC_LABEL && successor->head->x[0] == 'S') {
         // func body, ignore
-        char *func_name = calloc(strlen(block->next->head->x) + 1, sizeof(char));
+        char *func_name = calloc(strlen(successor->head->x) + 1, sizeof(char));
         if (!func_name) {
             fprintf(stderr, "_connect_basic_block(), no enough memory");
             exit(EXIT_FAILURE);
         }
-        strcpy(func_name, block->next->head->x);
+        strcpy(func_name, successor->head->x);
         func_name[0] = 'E';
         struct BranchBlockTacEntryValue *v = hashmap_get(branch_block_tac_map, &(struct BranchBlockTacEntry){.name = func_name});
         // jump to func end block
@@ -597,13 +596,17 @@ void optimize_tac(struct BasicBlock *block) {
     hashmap_free(post_tac_map);
 }
 
-void print_cfg(struct CFG *cfg) {
+void print_cfg(struct CFG *cfg, bool only_reachable, bool split) {
     if (!cfg) return;
 
     struct BasicBlock *block = cfg->entry;
     while (block) {
+        if (only_reachable && !block->visited) {
+            block = block->next;
+            continue;
+        }
         print_tac_list(block->head, block->tail);
-        printf("\n");
+        if (split) printf("\n");
         block = block->next;
     }
 }

@@ -25,7 +25,7 @@ struct CFG {
 
 struct BasicBlock *create_basic_block(struct TAC *tac);
 struct CFG        *create_cfg(struct TAC *tac);
-void               print_cfg(struct CFG *cfg);
+void               print_cfg(struct CFG *cfg, bool only_reachable, bool split);
 
 void pre_optimization(struct BasicBlock *block);
 void post_optimization(struct BasicBlock *block);
