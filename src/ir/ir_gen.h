@@ -25,17 +25,4 @@ char *unpack_name(char *name);
 // return the result var name
 char *gen_tac_from_ast(struct AstNode *node, struct TAC **tac, char *func_name);
 
-hashmap create_used_var_map();
-
-// constant folding & propagation
-struct TAC *tac_global_var_removal(struct TAC *tail_tac, hashmap map);
-
-// dead code elimination
-void tac_dead_code_optimize(struct TAC *tac);
-
-// copy propagation
-void tac_copy_propagation_optimize(struct TAC *tac);
-
-void tac_optimize(struct TAC *tac);
-
 #endif

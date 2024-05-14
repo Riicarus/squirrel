@@ -47,7 +47,7 @@ void syntax_test() {
     struct CFG *cfg = create_cfg(root_tac);
     print_cfg(cfg);
 
-    printf("\n\n\n---------------------------------------------------------\n\n\nOptimized CFG:\n");
+    printf("\n\n\n---------------------------------------------------------\n\n\nOptimized TAC:\n");
 
     optimize_tac(cfg->entry);
     print_tac_list(root_tac, NULL);
