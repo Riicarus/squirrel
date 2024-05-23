@@ -28,3 +28,4 @@
     i = comp(i, 2);
     int k = comp(i, 3);
 }
+

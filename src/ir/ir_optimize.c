@@ -576,7 +576,6 @@ void _do_optimize_tac(struct BasicBlock *block) {
     }
 
     // redundancy optimization
-    // post_optimization(block);
     for (i = 0; i < block->successors_size; i++) {
         if (block->successors[i]->level < block->level) continue;
         post_optimization(block->successors[i]);

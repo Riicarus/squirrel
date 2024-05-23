@@ -14,7 +14,6 @@
 
     // func, if
     func comp(int a, int b) int {
-        int k = i + 9;
         if (a > b) { return i; }
         elseif (a == k) { return 0; }
         else { return -1; };

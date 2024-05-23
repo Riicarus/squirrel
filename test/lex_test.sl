@@ -20,9 +20,9 @@ name 10 1.0 'c' "str"
 
 // 'char' 
 
-// ''
+''
 
 "wrong str
 "
 
-// @
+@
